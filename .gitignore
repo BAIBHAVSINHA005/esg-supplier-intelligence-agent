@@ -1,13 +1,23 @@
+# Virtual environment
 .venv/
-__pycache__/
-*.pyc
+
+# Secrets
 .env
 
-vector_db/
-chroma_db/
+# Python
+__pycache__/
+*.pyc
 
-.ipynb_checkpoints/
+# Data
+data/chromadb/
+data/uploads/
 
-*.log
+# IDE
+.vscode/
+.idea/
 
+# OS
 .DS_Store
+Thumbs.db
+
+desktop.ini
