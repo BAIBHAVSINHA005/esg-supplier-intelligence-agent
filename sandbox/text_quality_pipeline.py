@@ -30,6 +30,7 @@ class TextPipelineState(TypedDict):
 
     # Written by summarise or too_short node
     result: Optional[str]
+    error: Optional[str]                            #Extending TypeDict, adding error to state
 
 
 # ── 3. NODE FUNCTIONS ──────────────────────────────────────────────────────
@@ -79,6 +80,7 @@ def summarise(state: TextPipelineState) -> dict:
 
         return {"result": f"SUMMARY: {summary}"}
     except Exception as e:
+        print(f"[summarise] Error: {e}")
         return {
             "result": None, 
             "error": str(e)
