@@ -1,5 +1,3 @@
-print("HELLO FROM PIPELINE")
-
 # text_quality_pipeline.py
 # Run with: python text_quality_pipeline.py
 
@@ -33,7 +31,8 @@ class TextPipelineState(TypedDict):
     # Written by summarise or too_short node
     result: Optional[str]
 
-    # ── 3. NODE FUNCTIONS ──────────────────────────────────────────────────────
+
+# ── 3. NODE FUNCTIONS ──────────────────────────────────────────────────────
 # Each node is a plain Python function.
 # It receives the current state dict.
 # It returns a dict of ONLY the fields it wants to update.
@@ -54,7 +53,7 @@ def check_length(state: TextPipelineState) -> dict:
     # Return ONLY the fields this node writes
     return {
         "word_count": word_count,
-        "is_adequate": is_adequate
+        "is_adequate": is_adequate 
     }
 
 
@@ -65,19 +64,25 @@ def summarise(state: TextPipelineState) -> dict:
     text = state["input_text"]
     print(f"[summarise] Calling Claude to summarise {state['word_count']} words...")
 
-    response = client.messages.create(
+    try: 
+        response = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=200,
         messages=[{
             "role": "user",
             "content": f"Summarise the following text in exactly one sentence:\n\n{text}"
         }]
-    )
+        )
 
-    summary = response.content[0].text.strip()
-    print(f"[summarise] Result: {summary}")
+        summary = response.content[0].text.strip()
+        print(f"[summarise] Result: {summary}")
 
-    return {"result": f"SUMMARY: {summary}"}
+        return {"result": f"SUMMARY: {summary}"}
+    except Exception as e:
+        return {
+            "result": None, 
+            "error": str(e)
+        }
 
 
 def too_short(state: TextPipelineState) -> dict:
