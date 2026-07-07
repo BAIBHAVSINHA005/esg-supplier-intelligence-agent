@@ -15,11 +15,6 @@ load_dotenv()
 
 key = os.getenv("ANTHROPIC_API_KEY")
 
-if key:
-    print(key[:15])
-else:
-    print("NO KEY FOUND")
-
 client = Anthropic()
 
 # ── 2. STATE DEFINITION ─
