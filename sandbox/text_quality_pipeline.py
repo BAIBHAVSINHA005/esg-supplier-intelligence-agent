@@ -11,7 +11,7 @@ from anthropic import Anthropic
 # pip install langgraph anthropic
 # Set ANTHROPIC_API_KEY in your environment before running.
 
-load_dotenv()
+load_dotenv(override=True)
 
 key = os.getenv("ANTHROPIC_API_KEY")
 
