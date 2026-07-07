@@ -33,6 +33,7 @@ class TextPipelineState(TypedDict):
     # Written by summarise or too_short node
     result: Optional[str]
     error: Optional[str]                            #Extending TypeDict, adding error to state
+    sentence_count: int
 
 
 # ── 3. NODE FUNCTIONS ──────────────────────────────────────────────────────
@@ -87,7 +88,21 @@ def summarise(state: TextPipelineState) -> dict:
             "result": None, 
             "error": str(e)
         }
+# first state accumulation exercise
+def count_sentences(state: TextPipelineState) -> dict:
 
+    text = state["result"]
+
+    if text:
+        sentence_count = text.count(".")            #Runs only if text exists
+    else:
+        sentence_count = 0
+
+    print(f"[count_sentences] Sentences: {sentence_count}")
+
+    return {
+        "sentence_count": sentence_count
+    }
 
 def too_short(state: TextPipelineState) -> dict:
     """
@@ -125,6 +140,7 @@ def build_pipeline():
     workflow.add_node("check_length", check_length)
     workflow.add_node("summarise", summarise)
     workflow.add_node("too_short", too_short)
+    workflow.add_node("count_sentences", count_sentences)
 
     # Set the first node that runs when graph.invoke() is called
     workflow.set_entry_point("check_length")
@@ -143,6 +159,11 @@ def build_pipeline():
     # Both terminal nodes go straight to END
     workflow.add_edge("summarise", END)
     workflow.add_edge("too_short", END)
+
+    workflow.add_edge("summarise", "count_sentences")
+    workflow.add_edge("count_sentences", END)
+
+   
 
     # Compile the graph — this validates the structure and returns a runnable object
     return workflow.compile()
@@ -184,7 +205,11 @@ if __name__ == "__main__":
         "input_text": long_text,
         "word_count": 0,
         "is_adequate": False,
-        "result": None
+        "result": None,
+
+        "error": None,
+        
+        "sentence_count": 0
     })
     print(f"Final result: {long_result['result']}")
 
