@@ -112,19 +112,41 @@ def too_short(state: TextPipelineState) -> dict:
     return {"result": f"TEXT TOO SHORT ({state['word_count']} words). Minimum is 50 words."}
 
 
+def needs_context(state: TextPipelineState) -> dict:
+    """
+    Node 2c: Text is in the 50-100 word range.
+    Mock implementation — no Claude call required.
+    Replace the return value with a real API call once credits are available.
+    """
+    word_count = state["word_count"]
+    print(f"[needs_context] {word_count} words. Moderate length — generating contextual summary (mock).")
+
+    mock_result = (
+        f"[MOCK — no API call made] Text contains {word_count} words. "
+        f"In production this node calls Claude for a 3-sentence contextual summary. "
+        f"Single-sentence summarisation is reserved for texts over 100 words."
+    )
+
+    return {"result": mock_result}
+
+
 # ── 4. ROUTING FUNCTION ────────────────────────────────────────────────────
 # This function is called by LangGraph after check_length completes.
 # It reads the current state and returns the name of the next node.
 
 def route_by_length(state: TextPipelineState) -> str:
     """
-    Conditional routing: decide which node to go to next.
-    Return the node NAME as a string — must match a registered node name.
+    Three-way routing based on word count.
+    Return value must match a key in the add_conditional_edges mapping dict.
     """
-    if state["is_adequate"]:
-        return "summarise"
-    else:
+    word_count = state["word_count"]
+
+    if word_count < 50:
         return "too_short"
+    elif word_count <= 100:
+        return "needs_context"
+    else:
+        return "summarise"
 
 
 # ── 5. GRAPH ASSEMBLY ──────────────────────────────────────────────────────
@@ -140,6 +162,7 @@ def build_pipeline():
     workflow.add_node("check_length", check_length)
     workflow.add_node("summarise", summarise)
     workflow.add_node("too_short", too_short)
+    workflow.add_node("needs_context", needs_context)
     workflow.add_node("count_sentences", count_sentences)
 
     # Set the first node that runs when graph.invoke() is called
@@ -148,17 +171,21 @@ def build_pipeline():
     # Conditional edge: after check_length, call route_by_length to decide what's next
     # The dict maps each possible return value of route_by_length to a node name
     workflow.add_conditional_edges(
-        "check_length",              # Source node
-        route_by_length,             # Routing function
+        "check_length",
+        route_by_length,
         {
-            "summarise": "summarise",    # If route_by_length returns "summarise" → go to "summarise"
-            "too_short": "too_short"     # If route_by_length returns "too_short" → go to "too_short"
+        "too_short":     "too_short",
+        "needs_context": "needs_context",
+        "summarise":     "summarise"
         }
     )
+    
 
-    # Both terminal nodes go straight to END
-    workflow.add_edge("summarise", END)
+    # too_short and needs_context terminate directly.
+    # summarise continues to count_sentences.
+    
     workflow.add_edge("too_short", END)
+    workflow.add_edge("needs_context", END)
 
     workflow.add_edge("summarise", "count_sentences")
     workflow.add_edge("count_sentences", END)
@@ -182,7 +209,9 @@ if __name__ == "__main__":
         "input_text": "This is a very short piece of text.",
         "word_count": 0,        # LangGraph needs all TypedDict keys at invocation
         "is_adequate": False,   # These will be overwritten by check_length
-        "result": None
+        "result": None,
+        "error": None,
+        "sentence_count": 0
     })
     print(f"Final result: {short_result['result']}")
 
@@ -212,6 +241,32 @@ if __name__ == "__main__":
         "sentence_count": 0
     })
     print(f"Final result: {long_result['result']}")
+
+
+    # Test 3: Medium text — should route to needs_context
+    print("\n" + "=" * 60)
+    print("TEST 3: Medium text (50–100 words → needs_context)")
+    print("=" * 60)
+    medium_text = (
+    "BRSR stands for Business Responsibility and Sustainability Report. "
+    "It is mandated by SEBI for the top 1000 listed companies in India. "
+    "The framework covers nine principles drawn from the National Guidelines "
+    "on Responsible Business Conduct. These principles address ethics, "
+    "employee wellbeing, environmental protection, and human rights. "
+    "Companies must disclose both essential and leadership indicators annually."
+)
+    medium_result = pipeline.invoke({
+    "input_text": medium_text,
+    "word_count": 0,
+    "is_adequate": False,
+    "result": None,
+    "sentence_count": 0
+    })
+    print(f"Final result: {medium_result['result']}")
+
+print("\nFULL FINAL STATE (Test 3):")
+for key, value in medium_result.items():
+    print(f"  {key}: {value}")
 
     # Inspect the full final state
     print("\n" + "=" * 60)
