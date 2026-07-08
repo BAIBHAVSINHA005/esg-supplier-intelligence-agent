@@ -7,13 +7,17 @@ from dotenv import load_dotenv
 from langgraph.graph import StateGraph, END
 from anthropic import Anthropic
 
+import sys
+
+sys.stdout.reconfigure(encoding="utf-8") #optional, but prevents UnicodeEncodeError on Windows when printing non-ASCII characters
+
 # ── 1. INSTALL DEPENDENCIES ─
 # pip install langgraph anthropic
 # Set ANTHROPIC_API_KEY in your environment before running.
 
 load_dotenv()
 
-key = os.getenv("ANTHROPIC_API_KEY")
+
 
 client = Anthropic()
 
@@ -33,7 +37,7 @@ class TextPipelineState(TypedDict):
     # Written by summarise or too_short node
     result: Optional[str]
     error: Optional[str]                            #Extending TypeDict, adding error to state
-    sentence_count: int
+    sentence_count: int                             
 
 
 # ── 3. NODE FUNCTIONS ──────────────────────────────────────────────────────
@@ -52,7 +56,7 @@ def check_length(state: TextPipelineState) -> dict:
     word_count = len(text.split())
     is_adequate = word_count >= 50
 
-    print(f"[check_length] Word count: {word_count}. Adequate: {is_adequate}")
+    print(f"[check_length] Word count: {word_count}. Adequate: {is_adequate}") #useful debugging print statement
 
     # Return ONLY the fields this node writes
     return {
@@ -90,6 +94,7 @@ def summarise(state: TextPipelineState) -> dict:
         }
 # first state accumulation exercise
 def count_sentences(state: TextPipelineState) -> dict:
+   
 
     text = state["result"]
 
@@ -122,7 +127,7 @@ def needs_context(state: TextPipelineState) -> dict:
     print(f"[needs_context] {word_count} words. Moderate length — generating contextual summary (mock).")
 
     mock_result = (
-        f"[MOCK — no API call made] Text contains {word_count} words. "
+        f"[MOCK -  no API call made] Text contains {word_count} words. "
         f"In production this node calls Claude for a 3-sentence contextual summary. "
         f"Single-sentence summarisation is reserved for texts over 100 words."
     )
@@ -215,37 +220,48 @@ if __name__ == "__main__":
     })
     print(f"Final result: {short_result['result']}")
 
-    # Test 2: Long text (should route to summarise and call Claude)
+   
+    
+    # Test 2: Very long text (>100 words -> summarise)
     print("\n" + "=" * 60)
-    print("TEST 2: Long text")
+    print("TEST 2: Very Long Text (>100 words)")
     print("=" * 60)
-    long_text = """
+
+    very_long_text = """
     Business Responsibility and Sustainability Reporting represents a significant
     evolution in corporate disclosure requirements in India. Mandated by SEBI for
     the top 1000 listed companies by market capitalisation, BRSR requires companies
-    to disclose their performance across nine principles of the National Guidelines on
-    Responsible Business Conduct. These principles cover ethics, sustainable products,
-    employee wellbeing, stakeholder responsiveness, human rights, environmental
-    protection, public policy, inclusive growth, and consumer responsibility.
-    The framework is designed to create a standardised basis for ESG assessment
-    and improve transparency in the Indian capital markets.
-    """
-    long_result = pipeline.invoke({
-        "input_text": long_text,
-        "word_count": 0,
-        "is_adequate": False,
-        "result": None,
+    to disclose their performance across nine principles of the National Guidelines
+    on Responsible Business Conduct. These principles cover ethics, sustainable
+    products, employee wellbeing, stakeholder responsiveness, human rights,
+    environmental protection, public policy, inclusive growth, and consumer
+    responsibility.
 
-        "error": None,
-        
-        "sentence_count": 0
-    })
-    print(f"Final result: {long_result['result']}")
+    The framework is designed to create a standardised basis for ESG assessment
+    and improve transparency in Indian capital markets. Companies are expected to
+    provide disclosures covering governance structures, environmental impacts,
+    employee welfare practices, stakeholder engagement, and responsible supply chain
+    management. Investors, regulators, customers, and rating agencies increasingly
+    use these disclosures to evaluate corporate sustainability performance.
+
+    As ESG expectations continue to grow globally, BRSR has become an important
+    mechanism for demonstrating accountability and long-term value creation.
+    """
+
+    long_result = pipeline.invoke({
+    "input_text": very_long_text,
+    "word_count": 0,
+    "is_adequate": False,
+    "result": None,
+    "error": None,
+    "sentence_count": 0
+})
+    print(long_result)
 
 
     # Test 3: Medium text — should route to needs_context
     print("\n" + "=" * 60)
-    print("TEST 3: Medium text (50–100 words → needs_context)")
+    print("TEST 3: Medium text (50–100 words -> needs_context)")
     print("=" * 60)
     medium_text = (
     "BRSR stands for Business Responsibility and Sustainability Report. "
@@ -260,18 +276,21 @@ if __name__ == "__main__":
     "word_count": 0,
     "is_adequate": False,
     "result": None,
+    "error": None,
     "sentence_count": 0
     })
     print(f"Final result: {medium_result['result']}")
+
+# Inspect the full final state
 
 print("\nFULL FINAL STATE (Test 3):")
 for key, value in medium_result.items():
     print(f"  {key}: {value}")
 
-    # Inspect the full final state
-    print("\n" + "=" * 60)
-    print("FULL FINAL STATE (Test 2):")
-    print("=" * 60)
-    for key, value in long_result.items():
-        print(f"  {key}: {value}")
+
+print("\n" + "=" * 60)
+print("FULL FINAL STATE (Test 2):")
+print("=" * 60)
+for key, value in long_result.items():
+    print(f"  {key}: {value}")
 
