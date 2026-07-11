@@ -1,28 +1,52 @@
 
+#app/agent/nodes/ingest.py
+
+# app/agent/nodes/ingest.py
+
+import fitz
 from app.agent.state import AssessmentState
+from app.extraction.pdf_parser import extract_text_from_bytes
 
 
 def ingest_document(state: AssessmentState) -> dict:
     """
-    PHASE 2 PLACEHOLDER — Real implementation in Phase 2 (Day 4).
+    Node 1: Extract text and page-level chunks from the uploaded PDF.
 
-    Real responsibility:
-    - Open document_bytes using PyMuPDF (fitz.open(stream=...))
-    - Extract text from every page using page.get_text("text")
-    - Split text into chunks with page and section metadata
-    - Return document_text, document_chunks, num_pages
+    Reads:  document_bytes, source_filename
+    Writes: document_text, document_chunks, num_pages
+            document_failure, document_failure_reason (on parse error)
 
-    This node does NOT call LLM.
-    This node does NOT touch ChromaDB.
-    This node only transforms bytes → text.
-    """ 
-    print(f"[ingest_document] PLACEHOLDER — would parse PDF: {state['source_filename']}")
+    No LLM call. No ChromaDB. Pure document processing.
+    """
+    print("[ingest_document]")
 
-    return {
-    "document_text": (
-        "PLACEHOLDER: full PDF text will appear here "
-        "once PyMuPDF ingestion is implemented."
-    ),
-    "document_chunks": [],
-    "num_pages": 0,
-    }
+    pdf_bytes = state.get("document_bytes", b"")
+
+    if not pdf_bytes:
+        return {
+            "document_text": "",
+            "document_chunks": [],
+            "num_pages": 0,
+            "document_failure": True,
+            "document_failure_reason": "No document bytes received. Please upload a PDF file."
+        }
+
+    try:
+        full_text, chunks, num_pages = extract_text_from_bytes(pdf_bytes)
+        print(f"[ingest_document] Extracted {len(full_text):,} chars from {num_pages} pages")
+        return {
+            "document_text": full_text,
+            "document_chunks": chunks,
+            "num_pages": num_pages,
+            "document_failure": False,
+            "document_failure_reason": None,
+        }
+    except Exception as e:
+        print(f"[ingest_document] ERROR: {e}")
+        return {
+            "document_text": "",
+            "document_chunks": [],
+            "num_pages": 0,
+            "document_failure": True,
+            "document_failure_reason": f"PDF could not be opened or parsed: {str(e)}"
+        }

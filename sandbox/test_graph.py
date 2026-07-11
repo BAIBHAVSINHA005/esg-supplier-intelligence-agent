@@ -1,81 +1,55 @@
+# sandbox/test_graph.py
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from app.agent.graph import esg_graph
+from app.agent.state import make_initial_state
 
 
-def make_initial_state(supplier_name: str, document_failure: bool = False) -> dict:
-    """
-    Helper that builds a fully-initialised state dict.
-    Every TypedDict field must be present at invoke() time.
-    Build this function now — you will reuse it in every test.
-    """
-    return {
-        # Input
-        "assessment_id":    "test-001",
-        "supplier_name":    supplier_name,
-        "source_filename":  "test_brsr.pdf",
-        "document_bytes":   b"",
+def run(pdf_path: str = None):
+    if pdf_path:
+        pdf_bytes = Path(pdf_path).read_bytes()
+        filename = Path(pdf_path).name
+        supplier_name = filename.replace(".pdf", "").replace("_", " ").title()
+        print(f"\nTesting with real PDF: {filename}")
+    else:
+        pdf_bytes = b""
+        filename = "mock_test.pdf"
+        supplier_name = "Mock Supplier Ltd"
+        print("\nNo PDF provided — running with empty bytes (expect document failure)")
 
-        # Ingestion
-        "document_text":    "",
-        "document_chunks":  [],
-        "num_pages":        0,
+    state = make_initial_state(
+        supplier_name=supplier_name,
+        source_filename=filename,
+        document_bytes=pdf_bytes,
+    )
 
-        # Quality check
-        "is_machine_readable":        False,
-        "brsr_section_found":         False,
-        "brsr_section_text":          "",
-        "extraction_confidence_score": 0.0,
-        "document_failure":           document_failure,
-        "document_failure_reason":    None,
+    result = esg_graph.invoke(state)
 
-        # Extraction
-        "extracted_indicators": {},
+    print("\n" + "=" * 60)
+    print("EXECUTION RESULT")
+    print("=" * 60)
+    print(f"Document failure:     {result.get('document_failure')}")
+    print(f"Machine readable:     {result.get('is_machine_readable')}")
+    print(f"BRSR section found:   {result.get('brsr_section_found')}")
+    print(f"Confidence score:     {result.get('extraction_confidence_score')}")
+    print(f"BRSR section length:  {len(result.get('brsr_section_text', '')):,} chars")
 
-        # Analysis
-        "scope3_verdict":       {},
-        "completeness_results": [],
-        "gaps":                 [],
+    if result.get("document_failure_reason"):
+        print(f"Failure reason:       {result['document_failure_reason']}")
 
-        # Confidence
-        "confidence_level":    "low",
-        "confidence_directive": "",
-        "hitl_flag":           False,
-        "uncertain_fields":    [],
+    brief = result.get("brief")
+    if brief and not result.get("document_failure"):
+        print(f"Brief generated:      Yes")
+    elif result.get("error"):
+        print(f"Error brief:          {result['error'][:100]}")
 
-        # Output
-        "followup_questions": [],
-        "brief":              None,
-        "error":              None,
-    }
-
+    print("=" * 60)
 
 
 if __name__ == "__main__":
-
-    # ── Test 1: Happy path (document_failure stays False after quality_check) ──
-    print("\n" + "=" * 60)
-    print("TEST 1: Happy path — all nodes should run")
-    print("=" * 60)
-    result = esg_graph.invoke(make_initial_state("Infosys Limited"))
-
-    print("\nFINAL STATE — selected fields:")
-    print(f"  brief.header.supplier_name : {result['brief']['header']['supplier_name']}")
-    print(f"  confidence_level           : {result['confidence_level']}")
-    print(f"  scope3_verdict.level       : {result['scope3_verdict']['level']}")
-    print(f"  hitl_flag                  : {result['hitl_flag']}")
-    print(f"  brief.status               : {result['brief']['status']}")
-
-    # ── Test 2: Failure path (pre-set document_failure=True) ──
-    # Note: In this placeholder, quality_check always returns document_failure=False.
-    # To test the failure path, we pre-set it in the initial state AND it will be
-    # overwritten to False by quality_check. To genuinely test failure routing,
-    # temporarily change quality_check to return document_failure=True.
-    #
-    # Alternatively, test the routing function directly:
-    from app.agent.edges.routing import route_after_quality_check
-    print("\n" + "=" * 60)
-    print("TEST 2: Routing function unit test")
-    print("=" * 60)
-    route_on_failure = route_after_quality_check({"document_failure": True})
-    route_on_success = route_after_quality_check({"document_failure": False})
-    print(f"  document_failure=True  → {route_on_failure}")   # expect: handle_failure
-    print(f"  document_failure=False → {route_on_success}")   # expect: extract_indicators
+    pdf_arg = sys.argv[1] if len(sys.argv) > 1 else None
+    run(pdf_arg)

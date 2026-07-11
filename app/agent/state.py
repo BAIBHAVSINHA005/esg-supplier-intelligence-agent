@@ -238,3 +238,55 @@ class AssessmentState(TypedDict):
     # Placeholder: None
     # Future: populated by handle_failure from document_failure_reason.
     # Used by: compile_brief and Streamlit to display the failure message.
+
+
+def make_initial_state(
+    supplier_name: str,
+    source_filename: str = "test_brsr.pdf",
+    document_bytes: bytes = b"",
+    document_failure: bool = False,
+) -> dict:
+    """
+    Helper that builds a fully-initialised state dict.
+    Every TypedDict field must be present at invoke() time.
+    """
+
+    return {
+        # Input
+        "assessment_id": "test-001",
+        "supplier_name": supplier_name,
+        "source_filename": source_filename,
+        "document_bytes": document_bytes,
+
+        # Ingestion
+        "document_text": "",
+        "document_chunks": [],
+        "num_pages": 0,
+
+        # Quality check
+        "is_machine_readable": False,
+        "brsr_section_found": False,
+        "brsr_section_text": "",
+        "extraction_confidence_score": 0.0,
+        "document_failure": document_failure,
+        "document_failure_reason": None,
+
+        # Extraction
+        "extracted_indicators": {},
+
+        # Analysis
+        "scope3_verdict": {},
+        "completeness_results": [],
+        "gaps": [],
+
+        # Confidence
+        "confidence_level": "low",
+        "confidence_directive": "",
+        "hitl_flag": False,
+        "uncertain_fields": [],
+
+        # Output
+        "followup_questions": [],
+        "brief": None,
+        "error": None,
+    }
