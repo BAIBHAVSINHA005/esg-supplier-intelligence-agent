@@ -1,7 +1,7 @@
 # app/extraction/pdf_parser.py
 
 import fitz  # PyMuPDF
-from typing import Optional
+
 
 
 def extract_text_from_bytes(pdf_bytes: bytes) -> tuple[str, list[dict], int]:

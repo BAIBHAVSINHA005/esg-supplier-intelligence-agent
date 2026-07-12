@@ -3,7 +3,7 @@
 
 # app/agent/nodes/ingest.py
 
-import fitz
+#import fitz
 from app.agent.state import AssessmentState
 from app.extraction.pdf_parser import extract_text_from_bytes
 
