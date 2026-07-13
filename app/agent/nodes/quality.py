@@ -13,6 +13,7 @@ from app.extraction.section_detector import (
 )
 
 
+
 def quality_check(state: AssessmentState) -> dict:
     """
     Node 2: Assess document quality and locate the BRSR section.
@@ -44,8 +45,9 @@ def quality_check(state: AssessmentState) -> dict:
     print(f"[quality_check] {avg_chars:.0f} chars/page — readable: {readable}")
 
     # Check 2: Locate BRSR section
-    brsr_found, brsr_text, _ = find_brsr_section(full_text)
-    print(f"[quality_check] BRSR section found: {brsr_found} ({len(brsr_text):,} chars)")
+    brsr_found, brsr_text, start_idx = find_brsr_section(full_text)
+
+    
 
     # Check 3: Principle 6 presence
     has_p6 = has_principle_6_content(brsr_text) if brsr_found else False

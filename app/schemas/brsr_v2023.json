@@ -1,0 +1,40 @@
+{
+  "framework": "brsr_v2023",
+  "version": "2023",
+    "principles": {
+    "principle_6": {
+      "name": "Environment",
+      "essential_indicators": {
+        "e6_energy_consumption": {
+          "description": "Total energy consumption within the organisation (in Joules or multiples), including energy from renewable and non-renewable sources",
+          "expected_type": "quantitative",
+          "unit": "GJ or TJ"
+        },
+        "e6_scope1_emissions": {
+          "description": "Total Scope 1 GHG emissions in metric tonnes of CO2 equivalent",
+          "expected_type": "quantitative",
+          "unit": "tCO2e"
+        },
+        "e6_scope2_emissions": {
+          "description": "Total Scope 2 GHG emissions in metric tonnes of CO2 equivalent",
+          "expected_type": "quantitative",
+          "unit": "tCO2e"
+        },
+        "e6_scope3_emissions": {
+          "description": "Total Scope 3 GHG emissions in metric tonnes of CO2 equivalent, if reported",
+          "expected_type": "quantitative",
+          "unit": "tCO2e",
+          "notes": "Leadership indicator. Check for: absolute figure, methodology, category boundary, reduction target"
+        },
+        "e6_ghg_methodology": {
+          "description": "Name of the accounting methodology used for GHG inventory (e.g. GHG Protocol, ISO 14064)",
+          "expected_type": "qualitative"
+        },
+        "e6_climate_target": {
+          "description": "Whether the company has disclosed an emissions reduction target, including baseline year, target year, and scope coverage",
+          "expected_type": "qualitative"
+        }
+      }
+    }
+  }
+}

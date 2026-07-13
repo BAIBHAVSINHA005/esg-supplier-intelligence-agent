@@ -39,6 +39,8 @@ PRINCIPLE_6_MARKERS = [
 ]
 
 
+MAX_SECTION_LENGTH = 80000
+
 def find_brsr_section(full_text: str) -> tuple[bool, str, int]:
     """
     Locate the BRSR chapter within a full annual report.
@@ -74,7 +76,7 @@ def find_brsr_section(full_text: str) -> tuple[bool, str, int]:
         return False, "", -1
 
     # Extract a window forward from the start marker
-    section_text = full_text[start_idx: start_idx + 60000]
+    section_text = full_text[start_idx: start_idx + MAX_SECTION_LENGTH]
     section_lower = section_text.lower()
 
     # Confirm with body markers — require at least 2 to avoid false positives
