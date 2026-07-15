@@ -12,7 +12,14 @@ DISCLAIMER = (
 
 def compile_brief(state: AssessmentState) -> dict:
     """
-    PHASE 4 PLACEHOLDER — Real implementation in Phase 4 (Days 22–25).
+    Generate final ESG Intelligence Brief.
+
+    This node assembles outputs from:
+    - analysis_layer
+    - assess_confidence
+    - generate_questions
+
+    into a single structured brief object.
 
     Real responsibility:
     - Assemble ALL state outputs into the final structured ESG Intelligence Brief
@@ -31,7 +38,8 @@ def compile_brief(state: AssessmentState) -> dict:
     This node writes: brief
     This node is the LAST node on the success path.
     """
-    print(f"[compile_brief] PLACEHOLDER — would assemble final brief for: {state['supplier_name']}")
+    print(f"[compile_brief] Assembling ESG Intelligence Brief for: "
+          f"{state['supplier_name']}")
 
     brief = {
         "disclaimer": DISCLAIMER,
@@ -49,7 +57,7 @@ def compile_brief(state: AssessmentState) -> dict:
         "gaps": state["gaps"],
         "followup_questions": state["followup_questions"],
         "uncertain_fields": state["uncertain_fields"],
-        "status": "PLACEHOLDER — real extraction results will populate all sections",
+        "status": "brief_generated",
     }
 
     return {"brief": brief}

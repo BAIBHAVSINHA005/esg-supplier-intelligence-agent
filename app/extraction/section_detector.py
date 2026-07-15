@@ -79,6 +79,8 @@ def find_brsr_section(full_text: str) -> tuple[bool, str, int]:
     section_text = full_text[start_idx: start_idx + MAX_SECTION_LENGTH]
     section_lower = section_text.lower()
 
+    
+
     # Confirm with body markers — require at least 2 to avoid false positives
     body_marker_count = sum(1 for m in BRSR_BODY_MARKERS if m in section_lower)
     if body_marker_count < 2:

@@ -1,34 +1,72 @@
 from app.agent.state import AssessmentState
 
 
+QUESTION_LIBRARY = {
+    "G-01": (
+        "Please provide Scope 3 greenhouse gas emissions data, "
+        "including categories covered, reporting boundary, "
+        "calculation methodology, and latest reporting period."
+    ),
+    "G-02": (
+        "Please identify the greenhouse gas accounting methodology "
+        "used for emissions reporting (for example GHG Protocol, "
+        "ISO 14064-1, or equivalent standard)."
+    ),
+    "G-03": (
+        "Please provide the missing Principle 6 environmental "
+        "disclosures, including energy consumption, Scope 1 and "
+        "Scope 2 emissions, water consumption, waste generation, "
+        "and related environmental performance indicators."
+    ),
+}
+
+
 def generate_questions(state: AssessmentState) -> dict:
     """
-    PHASE 3 PLACEHOLDER — Real implementation in Phase 3 (Day 20).
+    Generate supplier-facing follow-up questions from detected gaps.
 
-    Real responsibility:
-    - Read gaps from state (written by analysis_layer)
-    - If no gaps: return empty list
-    - Build a prompt listing the gaps and asking Claude to generate follow-up questions
-    - Apply question generation rules from the PRD:
-        * Maximum five questions
-        * Priority: Critical gaps first, then Notable, then Minor
-        * One question per gap
-        * Supplier-facing language (addressed to the supplier, not internal jargon)
-        * Each question names the specific missing item
-    - Parse Claude's response into the followup_questions list structure
-    - Each question links back to its source gap_id
+    Inputs:
+        state["gaps"]
 
-    This node DOES call Claude.
-    This node reads: gaps, supplier_name
-    This node writes: followup_questions
+    Outputs:
+        followup_questions
     """
+
+    gaps = state.get("gaps", [])
+
     print(
-    "[generate_questions] PLACEHOLDER — would generate "
-    f"follow-up questions from {len(state.get('gaps', []))} gaps"
-)
-    
+        f"[generate_questions] Building follow-up questions from "
+        f"{len(gaps)} gap(s)"
+    )
+
+    questions = []
+
+    for gap in gaps:
+
+        gap_id = gap.get("gap_id")
+
+        question_text = QUESTION_LIBRARY.get(
+            gap_id,
+            (
+                "Please provide additional information regarding "
+                f"the identified disclosure gap: {gap.get('gap_name')}."
+            ),
+        )
+
+        questions.append(
+            {
+                "rank": gap.get("rank", len(questions) + 1),
+                "gap_id": gap_id,
+                "gap_name": gap.get("gap_name"),
+                "question": question_text,
+            }
+        )
+
+    print(
+        f"[generate_questions] Generated "
+        f"{len(questions)} follow-up question(s)"
+    )
 
     return {
-        "followup_questions": []
+        "followup_questions": questions
     }
-

@@ -1,40 +1,101 @@
 {
-  "framework": "brsr_v2023",
-  "version": "2023",
+    "framework": "brsr_v2023",
+    "version": "2023",
     "principles": {
-    "principle_6": {
-      "name": "Environment",
-      "essential_indicators": {
-        "e6_energy_consumption": {
-          "description": "Total energy consumption within the organisation (in Joules or multiples), including energy from renewable and non-renewable sources",
-          "expected_type": "quantitative",
-          "unit": "GJ or TJ"
-        },
-        "e6_scope1_emissions": {
-          "description": "Total Scope 1 GHG emissions in metric tonnes of CO2 equivalent",
-          "expected_type": "quantitative",
-          "unit": "tCO2e"
-        },
-        "e6_scope2_emissions": {
-          "description": "Total Scope 2 GHG emissions in metric tonnes of CO2 equivalent",
-          "expected_type": "quantitative",
-          "unit": "tCO2e"
-        },
-        "e6_scope3_emissions": {
-          "description": "Total Scope 3 GHG emissions in metric tonnes of CO2 equivalent, if reported",
-          "expected_type": "quantitative",
-          "unit": "tCO2e",
-          "notes": "Leadership indicator. Check for: absolute figure, methodology, category boundary, reduction target"
-        },
-        "e6_ghg_methodology": {
-          "description": "Name of the accounting methodology used for GHG inventory (e.g. GHG Protocol, ISO 14064)",
-          "expected_type": "qualitative"
-        },
-        "e6_climate_target": {
-          "description": "Whether the company has disclosed an emissions reduction target, including baseline year, target year, and scope coverage",
-          "expected_type": "qualitative"
+        "principle_6": {
+            "name": "Environment",
+            "indicators": {
+                "e6_energy_consumption": {
+                    "indicator_id": "e6_energy_consumption",
+                    "name": "Total Energy Consumption",
+                    "type": "essential",
+                    "expected_data": "quantitative",
+                    "unit": "Joules or GJ",
+                    "description": "Total energy consumed from renewable and non-renewable sources within the organisation",
+                    "brsr_indicator_ref": "Principle 6, Essential Indicator E-3",
+                    "procurement_relevance": "medium"
+                },
+                "e6_scope1_emissions": {
+                    "indicator_id": "e6_scope1_emissions",
+                    "name": "Scope 1 GHG Emissions",
+                    "type": "essential",
+                    "expected_data": "quantitative",
+                    "unit": "tCO2e",
+                    "description": "Total direct GHG emissions from sources owned or controlled by the company",
+                    "brsr_indicator_ref": "Principle 6, Essential Indicator E-4",
+                    "procurement_relevance": "high"
+                },
+                "e6_scope2_emissions": {
+                    "indicator_id": "e6_scope2_emissions",
+                    "name": "Scope 2 GHG Emissions",
+                    "type": "essential",
+                    "expected_data": "quantitative",
+                    "unit": "tCO2e",
+                    "description": "Total indirect GHG emissions from purchased electricity, heat, steam or cooling",
+                    "brsr_indicator_ref": "Principle 6, Essential Indicator E-4",
+                    "procurement_relevance": "high"
+                },
+                "e6_ghg_methodology": {
+                    "indicator_id": "e6_ghg_methodology",
+                    "name": "GHG Accounting Methodology",
+                    "type": "essential",
+                    "expected_data": "qualitative",
+                    "unit": null,
+                    "description": "Named accounting methodology or standard used to calculate GHG emissions",
+                    "brsr_indicator_ref": "Principle 6, Essential Indicator E-4",
+                    "procurement_relevance": "high"
+                },
+                "e6_ghg_intensity": {
+                    "indicator_id": "e6_ghg_intensity",
+                    "name": "GHG Emission Intensity",
+                    "type": "essential",
+                    "expected_data": "quantitative",
+                    "unit": "tCO2e per unit",
+                    "description": "GHG emissions per unit of production, revenue, or other relevant metric",
+                    "brsr_indicator_ref": "Principle 6, Essential Indicator E-5",
+                    "procurement_relevance": "medium"
+                },
+                "e6_scope3_emissions": {
+                    "indicator_id": "e6_scope3_emissions",
+                    "name": "Scope 3 GHG Emissions",
+                    "type": "leadership",
+                    "expected_data": "quantitative",
+                    "unit": "tCO2e",
+                    "description": "Total indirect GHG emissions from value chain, upstream and downstream",
+                    "brsr_indicator_ref": "Principle 6, Leadership Indicator",
+                    "procurement_relevance": "critical"
+                },
+                "e6_climate_target": {
+                    "indicator_id": "e6_climate_target",
+                    "name": "Climate or Emissions Reduction Target",
+                    "type": "essential",
+                    "expected_data": "qualitative",
+                    "unit": null,
+                    "description": "Whether the company has disclosed an emissions reduction target including target year and baseline",
+                    "brsr_indicator_ref": "Principle 6, Essential Indicator E-6",
+                    "procurement_relevance": "high"
+                },
+                "e6_water_consumption": {
+                    "indicator_id": "e6_water_consumption",
+                    "name": "Water Consumption",
+                    "type": "essential",
+                    "expected_data": "quantitative",
+                    "unit": "kilolitres",
+                    "description": "Total water withdrawal and consumption by source",
+                    "brsr_indicator_ref": "Principle 6, Essential Indicator E-7",
+                    "procurement_relevance": "medium"
+                },
+                "e6_waste_generated": {
+                    "indicator_id": "e6_waste_generated",
+                    "name": "Total Waste Generated",
+                    "type": "essential",
+                    "expected_data": "quantitative",
+                    "unit": "metric tonnes",
+                    "description": "Total waste generated including hazardous and non-hazardous waste",
+                    "brsr_indicator_ref": "Principle 6, Essential Indicator E-8",
+                    "procurement_relevance": "medium"
+                }
+            }
         }
-      }
     }
-  }
 }
