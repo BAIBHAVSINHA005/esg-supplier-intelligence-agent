@@ -58,6 +58,16 @@ class AssessmentState(TypedDict):
     #   {"text": "...", "page": 45, "section": "Principle 6", "is_table": False}
     # Used by: the RAG layer to index into ChromaDB for retrieval during extraction.
 
+    retrieved_context: Dict[str, Any]
+    # Context returned by the retrieval layer for downstream extraction.
+    # Placeholder: {}
+    # Future: the most relevant ESG-related chunks retrieved from ChromaDB.
+    # MVP-2:
+    # Initially populated by the retrieve_context node using semantic search.
+    # May contain only a small set of top-k relevant chunks.
+    # Written by: retrieve_context
+    # Used by: extract_indicators
+
     num_pages: int
     # Total number of pages in the PDF.
     # Placeholder: 0
@@ -237,7 +247,7 @@ class AssessmentState(TypedDict):
     # Set only on the failure path. Human-readable failure description.
     # Placeholder: None
     # Future: populated by handle_failure from document_failure_reason.
-    # Used by: compile_brief and Streamlit to display the failure message.
+    # Used by: compile_brief and Streamlit to display the failure message.  
 
 
 def make_initial_state(
@@ -245,6 +255,9 @@ def make_initial_state(
     source_filename: str = "test_brsr.pdf",
     document_bytes: bytes = b"",
     document_failure: bool = False,
+    
+    
+    
 ) -> dict:
     """
     Helper that builds a fully-initialised state dict.
@@ -289,4 +302,7 @@ def make_initial_state(
         "followup_questions": [],
         "brief": None,
         "error": None,
+
+        # Retrieval outputs
+        "retrieved_context": {},
     }

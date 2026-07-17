@@ -22,5 +22,5 @@ def route_after_quality_check(state: AssessmentState) -> str:
         print("[routing] document_failure=True → routing to handle_failure")
         return "handle_failure"
 
-    print("[routing] document_failure=False → routing to extract_indicators")
-    return "extract_indicators"
+    print("[routing] document_failure=False → routing to retrieve_context")
+    return "retrieve_context"

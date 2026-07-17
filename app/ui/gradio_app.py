@@ -1,3 +1,5 @@
+# app\ui\gradio_app.py
+
 import gradio as gr
 from pathlib import Path
 

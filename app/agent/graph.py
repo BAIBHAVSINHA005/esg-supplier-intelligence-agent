@@ -1,3 +1,5 @@
+#app\agent\graph.py
+
 from langgraph.graph import StateGraph, END
 
 from app.agent.state import AssessmentState
@@ -10,6 +12,7 @@ from app.agent.nodes.questions import generate_questions
 from app.agent.nodes.brief import compile_brief
 from app.agent.nodes.failure import handle_failure
 from app.agent.edges.routing import route_after_quality_check
+from app.agent.nodes.retrieve import retrieve_context
 
 
 def build_graph():
@@ -42,6 +45,7 @@ def build_graph():
     workflow.add_node("generate_questions", generate_questions)
     workflow.add_node("compile_brief", compile_brief)
     workflow.add_node("handle_failure", handle_failure)
+    workflow.add_node("retrieve_context", retrieve_context)
 
     # ── Entry point ────────────────────────────────────────────────────────
     workflow.set_entry_point("ingest_document")
@@ -55,8 +59,10 @@ def build_graph():
     workflow.add_edge("analysis_layer", "assess_confidence")
     workflow.add_edge("assess_confidence", "generate_questions")
     workflow.add_edge("generate_questions", "compile_brief")
+    workflow.add_edge("retrieve_context","extract_indicators")
     workflow.add_edge("compile_brief", END)
     workflow.add_edge("handle_failure", END)
+    
 
     # ── Conditional edge — quality_check branches on document_failure ──────
     # route_after_quality_check reads state["document_failure"] and returns
@@ -67,7 +73,7 @@ def build_graph():
         "quality_check",              # source node
         route_after_quality_check,    # routing function
         {
-            "extract_indicators": "extract_indicators",
+            "retrieve_context": "retrieve_context",
             "handle_failure":     "handle_failure",
         }
     )
