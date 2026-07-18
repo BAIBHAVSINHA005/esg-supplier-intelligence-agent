@@ -1,11 +1,12 @@
 
-#app/agent/nodes/ingest.py_MVP11_ORIGINALCODE
+#app/agent/nodes/ingest.py_MVP1_ORIGINALCODE
 
 # app/agent/nodes/ingest.py
 
 #import fitz
 from app.agent.state import AssessmentState
 from app.extraction.pdf_parser import extract_text_from_bytes
+from app.rag.chunker import enhance_chunks
 
 
 def ingest_document(state: AssessmentState) -> dict:
@@ -33,6 +34,9 @@ def ingest_document(state: AssessmentState) -> dict:
 
     try:
         full_text, chunks, num_pages = extract_text_from_bytes(pdf_bytes)
+        chunks = enhance_chunks(chunks)
+        #debugging
+        print(f"[ingest_document] Enhanced {len(chunks)} chunks")
         print(f"[ingest_document] Extracted {len(full_text):,} chars from {num_pages} pages")
         return {
             "document_text": full_text,

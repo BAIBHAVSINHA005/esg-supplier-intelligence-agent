@@ -70,6 +70,8 @@ INDICATOR_KEYWORDS: dict[str, list[str]] = {
         "per unit of revenue",
         "per crore",
         "per tonne of production",
+        "Energy intensity",
+        "emission per unit",
     ],
     "e6_scope3_emissions": [
         "scope 3",
@@ -449,11 +451,25 @@ def extract_generic_indicator(text: str, indicator_def: dict) -> dict:
 
     positions = find_keyword_positions(text, keywords)
 
+    #debugging print
+    print(
+    f"[extract] {indicator_id} | matches={len(positions)}"
+)
+
     if not positions:
         return make_not_found_result(indicator_id, brsr_ref)
     # Use the first occurrence for context extraction
     first_pos, first_keyword = positions[0]
     context = extract_context(text, first_pos)
+
+    
+   #context print immediately shows what text the extractor is seeing
+    print(
+    f"[context] {indicator_id}\n"
+    f"keyword='{first_keyword}'\n"
+    f"{context[:250]}\n"
+    f"{'-'*60}"
+)
 
     # Check for absence phrases in the context
     absence_detected = has_absence_phrase(context)
@@ -479,6 +495,14 @@ def extract_generic_indicator(text: str, indicator_def: dict) -> dict:
         return make_not_found_result(indicator_id, brsr_ref)
 
     confidence = 0.70 if value else 0.55
+
+
+    print(
+    f"[extract] {indicator_id} | "
+    f"matches={len(positions)} | "
+    f"value={value} | "
+    f"state={state}"
+)
     return make_disclosed_result(
         indicator_id=indicator_id,
         brsr_ref=brsr_ref,
@@ -487,6 +511,7 @@ def extract_generic_indicator(text: str, indicator_def: dict) -> dict:
         confidence=confidence,
     )
 
+    
 
 def _find_generic_number(context: str) -> Optional[str]:
     """
@@ -519,6 +544,9 @@ def _find_generic_number(context: str) -> Optional[str]:
 
     for pattern in patterns:
         match = pattern.search(context)
+        if match:
+            print(f"[generic_number] matched: {match.group(0)}")
+            return match.group(0).strip()
         if match:
             return match.group(0).strip()
 
@@ -580,3 +608,4 @@ def extract_principle_indicators(
         results[indicator_id] = result
 
     return results
+

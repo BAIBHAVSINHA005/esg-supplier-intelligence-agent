@@ -1,6 +1,7 @@
 # app/rag/chunker.py
 
 from typing import List, Dict
+import uuid
 
 
 def enhance_chunks(existing_chunks: List[Dict]) -> List[Dict]:
@@ -112,7 +113,8 @@ def enhance_chunks(existing_chunks: List[Dict]) -> List[Dict]:
             #
             # "Evidence found in chunk_42"
             #
-            "chunk_id": f"chunk_{idx}",
+            "chunk_id": str(uuid.uuid4()),
+        
 
             # Placeholder.
             #

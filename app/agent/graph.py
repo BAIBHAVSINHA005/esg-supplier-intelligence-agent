@@ -13,6 +13,7 @@ from app.agent.nodes.brief import compile_brief
 from app.agent.nodes.failure import handle_failure
 from app.agent.edges.routing import route_after_quality_check
 from app.agent.nodes.retrieve import retrieve_context
+from app.agent.nodes.index import index_document
 
 
 def build_graph():
@@ -21,17 +22,21 @@ def build_graph():
 
     Graph structure:
     
-    START
-      └─ ingest_document
-            └─ quality_check
-                  ├─ [document_failure=True]  → handle_failure → END
-                  └─ [document_failure=False] → extract_indicators
-                                                      └─ analysis_layer
-                                                              └─ assess_confidence
-                                                                      └─ generate_questions
-                                                                              └─ compile_brief
-                                                                                      └─ END
-    """
+    Graph structure:
+
+START
+  └─ ingest_document
+        └─ index_document
+              └─ quality_check
+                    ├─ [document_failure=True]  → handle_failure → END
+                    └─ [document_failure=False] → retrieve_context
+                                                     └─ extract_indicators
+                                                            └─ analysis_layer
+                                                                   └─ assess_confidence
+                                                                          └─ generate_questions
+                                                                                 └─ compile_brief
+                                                                                        └─ END
+"""
 
     workflow = StateGraph(AssessmentState)
 
@@ -46,12 +51,14 @@ def build_graph():
     workflow.add_node("compile_brief", compile_brief)
     workflow.add_node("handle_failure", handle_failure)
     workflow.add_node("retrieve_context", retrieve_context)
+    workflow.add_node("index_document", index_document)
 
     # ── Entry point ────────────────────────────────────────────────────────
     workflow.set_entry_point("ingest_document")
 
-    # ── Sequential edges — always taken ───────────────────────────────────
-    workflow.add_edge("ingest_document", "quality_check")
+    
+    workflow.add_edge("ingest_document", "index_document")
+    workflow.add_edge("index_document", "quality_check")
 
     # Note: no edge from quality_check here — it uses a conditional edge below
 

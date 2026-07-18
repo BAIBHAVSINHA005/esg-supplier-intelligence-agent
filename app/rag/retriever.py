@@ -3,6 +3,7 @@
 from app.rag.client import get_client
 from app.rag.embeddings import get_embedding
 
+
 COLLECTION_NAME = "esg_document_chunks"
 
 

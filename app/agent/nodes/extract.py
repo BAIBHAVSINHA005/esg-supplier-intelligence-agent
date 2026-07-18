@@ -60,6 +60,7 @@ def extract_indicators(state: AssessmentState) -> dict:
         f"{len(principle_6_indicators)} indicators"
     )
 
+    #ESG classification starts here
     principle_6_results = extract_principle_indicators(
         principle_indicators=principle_6_indicators,
         brsr_section_text=brsr_text,
