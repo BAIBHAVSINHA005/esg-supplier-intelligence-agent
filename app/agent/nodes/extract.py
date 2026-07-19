@@ -25,28 +25,45 @@ def extract_indicators(state: AssessmentState) -> dict:
         return {"extracted_indicators": {}}
 
     # --------------------------------------------------
-    # Use retrieved chunks from ChromaDB
-    # --------------------------------------------------
+    # Build a unified retrieval context from all indicator-specific
+    # searches. This is a temporary compatibility layer so the
+    # existing keyword extractor can continue to operate on a single
+    # text corpus until the LLM extractor replaces it.
+    # --------------------------------------------------------------------------------------------------
 
-    retrieved_docs = (
-        state
-        .get("retrieved_context", {})
-        .get("documents", [[]])[0]
-    )
+    retrieved_context = state.get("retrieved_context", {})
 
-    if not retrieved_docs:
+    if not retrieved_context:
+        print("[extract_indicators] WARNING: No retrieved context found")
+        return {"extracted_indicators": {}}
+
+    all_chunks = []
+
+    for indicator_id, result in retrieved_context.items():
+
+        docs = result.get("documents", [[]])[0]
+
+        print(
+            f"[extract_indicators] {indicator_id}: {len(docs)} chunk(s)"
+        )
+
+        all_chunks.extend(docs)
+
+    if not all_chunks:
         print("[extract_indicators] WARNING: No retrieved chunks found")
         return {"extracted_indicators": {}}
 
-    brsr_text = "\n\n".join(retrieved_docs)
+    # Remove duplicate chunks while preserving order
+    unique_chunks = list(dict.fromkeys(all_chunks))
+
+    brsr_text = "\n\n".join(unique_chunks)
 
     print(
-        f"[extract_indicators] Extracting from "
-        f"{len(brsr_text):,} chars of retrieved context "
-        f"({len(retrieved_docs)} chunks)"
+        f"[extract_indicators] Combined "
+        f"{len(unique_chunks)} unique retrieved chunks "
+        f"({len(brsr_text):,} chars)"
     )
-
-    # Load schema
+     # Load schema
     schema = load_schema("brsr_v2023")
 
     # Phase 3: Principle 6 only
@@ -60,7 +77,7 @@ def extract_indicators(state: AssessmentState) -> dict:
         f"{len(principle_6_indicators)} indicators"
     )
 
-    #ESG classification starts here
+    # ESG classification starts here
     principle_6_results = extract_principle_indicators(
         principle_indicators=principle_6_indicators,
         brsr_section_text=brsr_text,
