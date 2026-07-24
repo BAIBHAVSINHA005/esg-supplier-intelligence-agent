@@ -2,7 +2,8 @@
 
 from app.agent.state import AssessmentState
 from app.schemas.loader import load_schema, get_indicators
-from app.extraction.keyword_extractor import extract_principle_indicators
+from app.extraction.llm_extractor import LLMExtractor
+from app.extraction.schemas import IndicatorExtractionResult, to_pipeline_dict
 
 
 def extract_indicators(state: AssessmentState) -> dict:
@@ -24,46 +25,13 @@ def extract_indicators(state: AssessmentState) -> dict:
         print("[extract_indicators] Upstream document failure — skipping extraction")
         return {"extracted_indicators": {}}
 
-    # --------------------------------------------------
-    # Build a unified retrieval context from all indicator-specific
-    # searches. This is a temporary compatibility layer so the
-    # existing keyword extractor can continue to operate on a single
-    # text corpus until the LLM extractor replaces it.
-    # --------------------------------------------------------------------------------------------------
-
     retrieved_context = state.get("retrieved_context", {})
 
     if not retrieved_context:
         print("[extract_indicators] WARNING: No retrieved context found")
         return {"extracted_indicators": {}}
 
-    all_chunks = []
-
-    for indicator_id, result in retrieved_context.items():
-
-        docs = result.get("documents", [[]])[0]
-
-        print(
-            f"[extract_indicators] {indicator_id}: {len(docs)} chunk(s)"
-        )
-
-        all_chunks.extend(docs)
-
-    if not all_chunks:
-        print("[extract_indicators] WARNING: No retrieved chunks found")
-        return {"extracted_indicators": {}}
-
-    # Remove duplicate chunks while preserving order
-    unique_chunks = list(dict.fromkeys(all_chunks))
-
-    brsr_text = "\n\n".join(unique_chunks)
-
-    print(
-        f"[extract_indicators] Combined "
-        f"{len(unique_chunks)} unique retrieved chunks "
-        f"({len(brsr_text):,} chars)"
-    )
-     # Load schema
+    # Load schema
     schema = load_schema("brsr_v2023")
 
     # Phase 3: Principle 6 only
@@ -73,15 +41,35 @@ def extract_indicators(state: AssessmentState) -> dict:
     )
 
     print(
-        f"[extract_indicators] Running keyword extraction for "
+        f"[extract_indicators] Running LLM extraction for "
         f"{len(principle_6_indicators)} indicators"
     )
 
-    # ESG classification starts here
-    principle_6_results = extract_principle_indicators(
-        principle_indicators=principle_6_indicators,
-        brsr_section_text=brsr_text,
-    )
+    llm_extractor = LLMExtractor()
+    principle_6_results = {}
+
+    for indicator_id, indicator_def in principle_6_indicators.items():
+        retrieval_result = retrieved_context.get(indicator_id, {})
+        documents = retrieval_result.get("documents", [[]])
+        chunks = documents[0] if documents else []
+        context = "\n\n".join(chunks)
+
+        print(
+            f"[extract_indicators] {indicator_id}: {len(chunks)} chunk(s)"
+        )
+
+        extraction_result = llm_extractor.extract_indicator(
+            indicator_id=indicator_id,
+            indicator_name=indicator_def["name"],
+            indicator_description=indicator_def["description"],
+            context=context,
+            citation=indicator_def.get("brsr_indicator_ref", ""),
+        )
+
+        if isinstance(extraction_result, IndicatorExtractionResult):
+            principle_6_results[indicator_id] = to_pipeline_dict(extraction_result)
+        else:
+            principle_6_results[indicator_id] = extraction_result
 
     # Count results by state for logging
     state_counts = {}
