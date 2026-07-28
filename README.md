@@ -1,132 +1,258 @@
 # Supplier ESG Intelligence Agent
 
-AI-powered document intelligence system that converts a supplier's Business Responsibility and Sustainability Report (BRSR) into a structured ESG Intelligence Brief in under 90 seconds.
+An AI-powered document intelligence system that transforms a supplier's **Business Responsibility and Sustainability Report (BRSR)** into a structured **ESG Intelligence Brief** in under 90 seconds.
 
-Built using Python, LangGraph, and Generative AI workflows.
+The project combines **LangGraph**, **Retrieval-Augmented Generation (RAG)**, **LLM-based information extraction**, and **deterministic ESG analysis** to automate supplier sustainability assessments.
 
 ---
 
-## Business Problem
+# Business Problem
 
 Organizations increasingly require ESG assessments of suppliers to support:
 
 - Scope 3 emissions reporting
 - Supplier onboarding
 - Procurement risk assessment
+- ESG due diligence
 - Sustainability compliance
 
-Today, ESG analysts often spend 45–90 minutes reviewing a single supplier filing manually.
+Today, ESG analysts often spend **45–90 minutes** manually reviewing a single supplier's sustainability report.
 
-This project reduces that effort to minutes by automating extraction, assessment, gap detection, and intelligence generation. :contentReference[oaicite:1]{index=1}
-
----
-
-## Solution
-
-The Supplier ESG Intelligence Agent:
-
-1. Ingests a supplier BRSR PDF
-2. Assesses document quality
-3. Extracts ESG indicators
-4. Evaluates disclosure completeness
-5. Determines Scope 3 readiness
-6. Detects critical disclosure gaps
-7. Generates supplier follow-up questions
-8. Produces a structured ESG Intelligence Brief
-
-All findings are evidence-backed and traceable to the source document. :contentReference[oaicite:2]{index=2}
+This project automates that workflow by extracting ESG disclosures, evaluating disclosure completeness, identifying reporting gaps, and generating an evidence-backed ESG Intelligence Brief within minutes.
 
 ---
 
-## Current Architecture (MVP-1)
+# Solution
 
-[graph diagram]
+The Supplier ESG Intelligence Agent performs an end-to-end ESG document analysis pipeline.
 
----
+## Workflow
 
-## Current Status
+1. Upload a supplier BRSR PDF
+2. Assess document quality
+3. Detect the reporting framework
+4. Index the document into a vector database
+5. Retrieve relevant evidence using RAG
+6. Extract ESG indicators using an LLM
+7. Perform deterministic ESG analysis
+8. Detect disclosure gaps
+9. Assess Scope 3 reporting readiness
+10. Generate supplier follow-up questions
+11. Produce a structured ESG Intelligence Brief
 
-### MVP-1 Complete
-
-✓ PDF Ingestion
-
-✓ Quality Assessment
-
-✓ BRSR Detection
-
-✓ ESG Indicator Extraction
-
-✓ Gap Analysis
-
-✓ Confidence Assessment
-
-✓ Follow-up Question Generation
-
-✓ Gradio User Interface
-
-✓ LangGraph Workflow Orchestration
+All findings are traceable to supporting evidence retrieved from the source document.
 
 ---
 
-## MVP-2 Roadmap
+# Current Architecture (v0.3.1)
 
-- ChromaDB
-- Embeddings
+```text
+                    Supplier BRSR PDF
+                           │
+                           ▼
+                    PDF Processing
+                           │
+                           ▼
+                 Quality Assessment
+                           │
+                           ▼
+               ChromaDB Vector Index
+                           │
+                           ▼
+                Retrieval (RAG Pipeline)
+                           │
+                           ▼
+                 LLM ESG Extraction
+                           │
+                           ▼
+             Deterministic ESG Analysis
+                           │
+                           ▼
+              ESG Intelligence Brief
+```
+
+---
+
+# Current Status
+
+**Latest Release:** **v0.3.1**
+
+### Completed Features
+
+- ✅ PDF ingestion
+- ✅ Document quality assessment
+- ✅ BRSR framework detection
+- ✅ PDF chunking
+- ✅ ChromaDB vector database
+- ✅ Retrieval-Augmented Generation (RAG)
+- ✅ OpenAI embedding-based retrieval
+- ✅ LLM-driven ESG indicator extraction
+- ✅ Semantic metadata extraction
+- ✅ Deterministic ESG analysis
+- ✅ Gap detection
+- ✅ Scope 3 readiness assessment
+- ✅ Supplier follow-up question generation
+- ✅ Structured ESG Intelligence Brief generation
+- ✅ Gradio web interface
+- ✅ LangGraph workflow orchestration
+- ✅ Regression tests for semantic extraction
+
+---
+
+# Key Features
+
 - Retrieval-Augmented Generation (RAG)
-- Evidence Grounding
-- Improved ESG Intelligence
+- Evidence-backed ESG extraction
+- Semantic metadata extraction
+- Structured ESG indicator mapping
+- Deterministic post-processing
+- Disclosure gap analysis
+- Scope 3 readiness assessment
+- Supplier intelligence report generation
+- Interactive Gradio interface
 
 ---
 
-## Tech Stack
+# Tech Stack
 
-- Python
-- LangGraph
+## AI & LLM
+
+- OpenAI GPT
 - LangChain
-- Gradio
-- PyMuPDF
+- LangGraph
 
-Future:
+## Retrieval
 
 - ChromaDB
 - OpenAI Embeddings
-- Retrieval Layer
+
+## Backend
+
+- Python
+- Pydantic
+- PyMuPDF
+
+## User Interface
+
+- Gradio
+
+## Testing
+
+- Pytest
 
 ---
 
-## Learning Outcomes
+# Project Structure
 
-This project demonstrates:
+```text
+app/
+│
+├── ingestion/
+├── retrieval/
+├── extraction/
+├── analysis/
+├── ui/
+├── schemas/
+└── workflow/
+
+tests/
+
+docs/
+
+data/
+
+research/
+
+README.md
+CHANGELOG.md
+requirements.txt
+```
+
+---
+
+# Technical Highlights
+
+This project demonstrates practical implementation of modern AI engineering concepts.
 
 ### Agent Engineering
 
-- LangGraph State Management
-- Conditional Routing
-- Multi-Step Workflows
-
-### Document AI
-
-- PDF Processing
-- Structured Extraction
-- Citation-Based Analysis
+- LangGraph state management
+- Multi-stage AI workflows
+- Conditional routing
+- Modular pipeline architecture
 
 ### Retrieval-Augmented Generation
 
-- Chunking
-- Embeddings
-- Vector Databases
-- Retrieval Pipelines
+- Document chunking
+- Embedding generation
+- Vector search
+- Context-aware retrieval
 
-### Product Development
+### Document AI
 
-- PRD-Driven Development
-- Architecture-First Design
-- Enterprise Workflow Modeling
+- PDF parsing
+- ESG information extraction
+- Evidence grounding
+- Structured data generation
+
+### Software Engineering
+
+- PRD-driven development
+- Modular architecture
+- Regression testing
+- Versioned releases
+- Git-based milestone tracking
 
 ---
 
-## Author
+# Next Milestone
 
-Baibhav Anand
+## MVP 3.1.5
 
-Building AI applications using Python, LangGraph, RAG, MCP, and Agentic AI workflows.
+Planned improvements:
+
+- Document-scoped retrieval
+- Metadata-based filtering
+- Improved retrieval precision
+- Eliminate cross-document retrieval contamination
+- Enhanced retrieval evaluation
+
+---
+
+# Screenshots
+
+*(To be added)*
+
+- Upload Interface
+- ESG Intelligence Brief
+- Workflow Visualization
+
+---
+
+# Release History
+
+See **CHANGELOG.md** for:
+
+- Version history
+- Development milestones
+- Bug fixes
+- Engineering decisions
+- Planned improvements
+
+---
+
+# Author
+
+**Baibhav Anand**
+
+Communication and Marketing professional transitioning into AI, Analytics, and Agentic AI Engineering.
+
+Currently building enterprise AI applications using:
+
+- Python
+- LangGraph
+- Retrieval-Augmented Generation (RAG)
+- Model Context Protocol (MCP)
+- Agentic AI workflows
+
+GitHub portfolio showcasing AI, analytics, and intelligent document processing projects.
