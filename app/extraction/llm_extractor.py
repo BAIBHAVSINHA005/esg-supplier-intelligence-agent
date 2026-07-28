@@ -58,7 +58,8 @@ class LLMExtractor:
             citation: Fallback citation returned if extraction fails.
 
         Returns:
-            A validated ``IndicatorExtractionResult`` on success. On an OpenAI,
+            A validated ``IndicatorExtractionResult`` on success, including
+            optional semantic flags when supplied by the model. On an OpenAI,
             JSON parsing, or schema validation failure, returns the standard
             pipeline-compatible error result dictionary.
         """

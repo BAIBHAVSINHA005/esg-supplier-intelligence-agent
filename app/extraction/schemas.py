@@ -35,6 +35,44 @@ DisclosureState = Literal[
 
 
 # ---------------------------------------------------------------------
+# Optional semantic metadata
+# ---------------------------------------------------------------------
+
+class IndicatorSemanticFlags(BaseModel):
+    """Optional indicator-specific semantics for downstream business rules.
+
+    The model keeps semantic interpretation separate from the core disclosure
+    fields so that future indicator families can add metadata without changing
+    the primary extraction contract.
+    """
+
+    scope3_mentioned: bool = Field(
+        default=False,
+        description="Whether the context explicitly mentions Scope 3 emissions.",
+    )
+
+    scope3_has_absolute_number: bool = Field(
+        default=False,
+        description="Whether Scope 3 is reported as an absolute quantity.",
+    )
+
+    scope3_has_methodology: bool = Field(
+        default=False,
+        description="Whether a Scope 3 calculation or reporting methodology is named.",
+    )
+
+    scope3_is_intensity_only: bool = Field(
+        default=False,
+        description="Whether Scope 3 is reported only as an intensity metric.",
+    )
+
+    scope3_has_materiality_claim: bool = Field(
+        default=False,
+        description="Whether the context makes a Scope 3 materiality or applicability claim.",
+    )
+
+
+# ---------------------------------------------------------------------
 # Result for ONE indicator
 # ---------------------------------------------------------------------
 
@@ -77,6 +115,11 @@ class IndicatorExtractionResult(BaseModel):
         description="Short internal explanation of why this classification was chosen."
     )
 
+    semantic_flags: Optional[IndicatorSemanticFlags] = Field(
+        default=None,
+        description="Optional indicator-specific semantic metadata for downstream rules.",
+    )
+
 
 # ---------------------------------------------------------------------
 # Internal result returned by the extractor
@@ -106,18 +149,33 @@ def to_pipeline_dict(
     - analysis_layer
     - assess_confidence
     - compile_brief
+
+    Semantic flags remain available as nested metadata and are also flattened
+    when present for existing deterministic analysis rules.
     """
 
-    return {
+    semantic_flags = (
+        result.semantic_flags.model_dump()
+        if result.semantic_flags is not None
+        else None
+    )
+
+    pipeline_result = {
         "indicator_id": result.indicator_id,
         "state": result.state,
         "value": result.value,
         "evidence": result.evidence,
         "citation": result.citation,
+        "semantic_flags": semantic_flags,
         "extraction_method": "llm",
         "confidence": result.confidence,
         "uncertain": False,
     }
+
+    if semantic_flags is not None:
+        pipeline_result.update(semantic_flags)
+
+    return pipeline_result
 
 
 # ---------------------------------------------------------------------

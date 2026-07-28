@@ -58,9 +58,19 @@ Rules:
     "evidence": "...",
     "citation": "...",
     "confidence": 0.95,
-    "reasoning": "short explanation"
+    "reasoning": "short explanation",
+    "semantic_flags": {
+      "scope3_mentioned": false,
+      "scope3_has_absolute_number": false,
+      "scope3_has_methodology": false,
+      "scope3_is_intensity_only": false,
+      "scope3_has_materiality_claim": false
+    }
   }
 }
+
+The semantic_flags field is optional. Include it only when the user prompt
+explicitly requests Scope 3 semantic flags; otherwise omit it.
 
 Do not include markdown.
 
@@ -105,8 +115,33 @@ If not disclosed:
 - Return an empty string for evidence.
 - Return an empty string for citation.
 
+{semantic_flags_instructions}
+
 Return ONLY valid JSON.
 """)
+
+
+SCOPE3_SEMANTIC_FLAGS_INSTRUCTIONS = dedent("""
+Because this is the Scope 3 emissions indicator, include semantic_flags with
+all five Boolean fields below. Set each field using ONLY the retrieved context:
+
+- scope3_mentioned: true only if Scope 3, Scope III, or value-chain indirect
+  emissions are explicitly mentioned.
+- scope3_has_absolute_number: true only if an absolute Scope 3 quantity is
+  reported (for example, a total tCO2e figure), not merely an intensity ratio.
+- scope3_has_methodology: true only if a Scope 3 calculation or reporting
+  methodology is explicitly named (for example, GHG Protocol or ISO 14064).
+- scope3_is_intensity_only: true only if Scope 3 is reported as an intensity
+  metric and no absolute Scope 3 quantity is reported.
+- scope3_has_materiality_claim: true only if the context explicitly says Scope
+  3 is immaterial, not relevant, not applicable, or makes an equivalent
+  materiality/applicability claim.
+""").strip()
+
+
+NON_SCOPE3_SEMANTIC_FLAGS_INSTRUCTIONS = (
+    "Do not include semantic_flags for this indicator."
+)
 
 
 # ---------------------------------------------------------------------
@@ -143,9 +178,16 @@ def build_extraction_prompt(
         Prompt ready to send to the LLM.
     """
 
+    semantic_flags_instructions = (
+        SCOPE3_SEMANTIC_FLAGS_INSTRUCTIONS
+        if indicator_id == "e6_scope3_emissions"
+        else NON_SCOPE3_SEMANTIC_FLAGS_INSTRUCTIONS
+    )
+
     return USER_PROMPT_TEMPLATE.format(
         indicator_id=indicator_id,
         indicator_name=indicator_name,
         indicator_description=indicator_description,
         context=context.strip(),
+        semantic_flags_instructions=semantic_flags_instructions,
     )
