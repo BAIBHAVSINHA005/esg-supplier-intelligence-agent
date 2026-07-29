@@ -28,7 +28,7 @@ def get_collection():
 # 2. Index Chunks
 # --------------------------------------------------
 
-def index_chunks(chunks):
+def index_chunks(chunks, document_id: str):
     """
     Store document chunks inside ChromaDB.
     """
@@ -42,7 +42,8 @@ def index_chunks(chunks):
             documents=[chunk["text"]],
             metadatas=[
                 {
-                    "page": chunk["page"]
+                    "page": chunk["page"],
+                    "document_id": document_id,
                 }
             ],
             embeddings=[
@@ -55,7 +56,7 @@ def index_chunks(chunks):
 # 3. Retrieve Chunks
 # --------------------------------------------------
 
-def retrieve_chunks(query: str, k: int = 5):
+def retrieve_chunks(query: str, document_id: str, k: int = 5):
     """
     Retrieve the most relevant chunks
     for a user query.
@@ -67,7 +68,8 @@ def retrieve_chunks(query: str, k: int = 5):
         query_embeddings=[
             get_embedding(query)
         ],
-        n_results=k
+        n_results=k,
+        where={"document_id": document_id},
     )
 
     return results

@@ -8,6 +8,7 @@ def index_document(state: AssessmentState) -> dict:
 
     Reads:
         document_chunks
+        document_id
 
     Writes:
         None (side-effect only)
@@ -19,6 +20,7 @@ def index_document(state: AssessmentState) -> dict:
     print("[index_document]")
 
     chunks = state.get("document_chunks", [])
+    document_id = state["document_id"]
 
     if not chunks:
         print("[index_document] No document chunks found.")
@@ -31,7 +33,7 @@ def index_document(state: AssessmentState) -> dict:
     try:
         print(f"[index_document] Indexing {len(chunks)} chunks...")
 
-        index_chunks(chunks)
+        index_chunks(chunks, document_id)
 
         print("[index_document] Indexing complete.")
 

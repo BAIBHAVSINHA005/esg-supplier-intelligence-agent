@@ -93,6 +93,7 @@ def retrieve_context(state: AssessmentState) -> dict:
     print("[retrieve_context]")
 
     retrieved_context = {}
+    document_id = state["document_id"]
 
     for indicator_id, query in INDICATOR_QUERIES.items():
 
@@ -100,6 +101,7 @@ def retrieve_context(state: AssessmentState) -> dict:
 
         results = retrieve_chunks(
             query=query,
+            document_id=document_id,
             k=5
         )
 

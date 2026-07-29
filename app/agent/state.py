@@ -1,6 +1,7 @@
 # app/agent/state.py
 
 from typing import TypedDict, Optional, Literal, List, Dict, Any
+from uuid import uuid4
 
 
 class AssessmentState(TypedDict):
@@ -23,6 +24,11 @@ class AssessmentState(TypedDict):
     # Placeholder: "test-001"
     # Future: UUID generated in app/utils/storage.py before invoke() is called.
     # Used to: link brief output to a stored assessment record.
+
+    document_id: str
+    # A unique identifier for the uploaded document in the retrieval subsystem.
+    # Generated as a UUID before graph invocation.
+    # Used only to isolate ChromaDB indexing and retrieval for this document.
 
     supplier_name: str
     # The name of the company whose BRSR is being assessed.
@@ -267,6 +273,7 @@ def make_initial_state(
     return {
         # Input
         "assessment_id": "test-001",
+        "document_id": str(uuid4()),
         "supplier_name": supplier_name,
         "source_filename": source_filename,
         "document_bytes": document_bytes,
