@@ -3,8 +3,7 @@
 import gradio as gr
 from pathlib import Path
 
-from app.agent.graph import esg_graph
-from app.agent.state import make_initial_state
+from app.services.supplier_assessment import run_supplier_assessment
 
 
 def assess_supplier(pdf_file):
@@ -22,13 +21,11 @@ def assess_supplier(pdf_file):
         .title()
     )
 
-    state = make_initial_state(
+    result = run_supplier_assessment(
+        pdf_bytes=pdf_bytes,
         supplier_name=supplier_name,
         source_filename=pdf_path.name,
-        document_bytes=pdf_bytes,
     )
-
-    result = esg_graph.invoke(state)
 
     brief = result.get("brief", {})
 
