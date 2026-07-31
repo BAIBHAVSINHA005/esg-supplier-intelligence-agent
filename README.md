@@ -44,31 +44,51 @@ All findings are traceable to supporting evidence retrieved from the source docu
 
 ---
 
+## Latest Updates
+
+### MVP 3.1.5 – Document-Level Retrieval Isolation
+
+The retrieval layer now supports document-scoped semantic search.
+
+Previously, all uploaded ESG reports shared a single Chroma collection without document identity, allowing semantically similar chunks from unrelated reports to be retrieved.
+
+Each indexed chunk now stores a UUID `document_id`, and retrieval is constrained using Chroma metadata filtering.
+
+This ensures retrieval is isolated to the currently uploaded ESG report while retaining a single shared Chroma collection.
+
 # Current Architecture (v0.3.1)
 
 ```text
-                    Supplier BRSR PDF
-                           │
-                           ▼
-                    PDF Processing
-                           │
-                           ▼
-                 Quality Assessment
-                           │
-                           ▼
-               ChromaDB Vector Index
-                           │
-                           ▼
-                Retrieval (RAG Pipeline)
-                           │
-                           ▼
-                 LLM ESG Extraction
-                           │
-                           ▼
-             Deterministic ESG Analysis
-                           │
-                           ▼
-              ESG Intelligence Brief
+Upload PDF
+      │
+      ▼
+Document Parser
+      │
+      ▼
+Chunking
+      │
+      ▼
+Embedding
+      │
+      ▼
+ChromaDB
+(page + document_id metadata)
+      │
+      ▼
+Metadata Filter
+(document_id)
+      │
+      ▼
+Top-k Semantic Retrieval
+      │
+      ▼
+LLM Extraction
+      │
+      ▼
+Analysis Layer
+      │
+      ▼
+ESG Intelligence Brief
 ```
 
 ---
@@ -169,10 +189,18 @@ requirements.txt
 ```
 
 ---
+## Technical Highlights
 
-# Technical Highlights
+- LangGraph orchestration
+- ChromaDB vector database
+- OpenAI GPT-4.1 structured extraction
+- Sentence Transformer embeddings
+- Document-level retrieval isolation using Chroma metadata filtering
+- ESG Principle 6 indicator extraction
+- Confidence assessment
+- Gap analysis
+- Automated follow-up question generation
 
-This project demonstrates practical implementation of modern AI engineering concepts.
 
 ### Agent Engineering
 
@@ -207,15 +235,17 @@ This project demonstrates practical implementation of modern AI engineering conc
 
 # Next Milestone
 
-## MVP 3.1.5
+# Next Milestone
+
+## MVP 3.2 – User Experience & Deployment
 
 Planned improvements:
 
-- Document-scoped retrieval
-- Metadata-based filtering
-- Improved retrieval precision
-- Eliminate cross-document retrieval contamination
-- Enhanced retrieval evaluation
+- Streamlit-based production UI
+- Improved visualization of ESG Intelligence Brief
+- Better progress tracking during analysis
+- Retrieval quality evaluation
+- OpenAI rate-limit handling with retries
 
 ---
 
@@ -256,3 +286,31 @@ Currently building enterprise AI applications using:
 - Agentic AI workflows
 
 GitHub portfolio showcasing AI, analytics, and intelligent document processing projects.
+
+
+
+## Engineering Decisions
+
+### Document-Level Retrieval Isolation
+
+Instead of maintaining one vector collection per uploaded document, the application stores all document embeddings in a shared Chroma collection.
+
+Each chunk is tagged with a UUID `document_id`.
+
+Retrieval is constrained using Chroma metadata filtering:
+
+This design prevents cross-document retrieval contamination while preserving a single shared vector collection.
+
+```python
+where={"document_id": document_id}
+
+## Engineering Lessons
+
+During development, the retrieval layer was refactored to support document-level isolation.
+
+The project now distinguishes between:
+
+- `document_id` – retrieval infrastructure
+- `assessment_id` – business workflow
+
+This separation improves maintainability, enables metadata-based filtering, and provides a foundation for future document caching and retrieval optimization.
