@@ -4,7 +4,7 @@
 # and detect procurement-relevant disclosure gaps.
 #
 # Reads:  extracted_indicators, document_failure
-# Writes: scope3_verdict, completeness_results, gaps
+# Writes: scope3_verdict, completeness_results, gaps, recommended_actions
 #
 # Pure deterministic Python — no LLM calls, no ChromaDB, no API costs.
 # All logic is a direct implementation of PRD Sections 11, 12, and 13.
@@ -14,7 +14,8 @@
 #   SECTION 2 — Maturity signal extraction (_extract_maturity_signals)
 #   SECTION 3 — Completeness assessment (_assess_p6_completeness)
 #   SECTION 4 — Gap detection (_detect_gaps)
-#   SECTION 5 — Node entry point (analysis_layer)
+#   SECTION 5 — Recommended actions (_generate_recommended_actions)
+#   SECTION 6 — Node entry point (analysis_layer)
 
 from app.agent.state import AssessmentState
 from app.schemas.loader import load_schema
@@ -32,6 +33,11 @@ _SCOPE3_LEVELS = {
         "level":        "not_found",
         "level_number": 0,
         "label":        "Not Found in Uploaded BRSR Filing",
+    },
+    "unassessed": {
+        "level":        "unassessed",
+        "level_number": None,
+        "label":        "Unassessed due to extraction error",
     },
     "materiality_claim": {
         "level":        "materiality_claim",
@@ -96,6 +102,16 @@ def _classify_scope3(scope3_indicator: dict) -> dict:
         "citation",
         "Principle 6, Leadership Indicator"
     )
+
+    if state == "extraction_error":
+        return {
+            **_SCOPE3_LEVELS["unassessed"],
+            "evidence": (
+                scope3_indicator.get("error_message")
+                or "Scope 3 could not be assessed because extraction failed."
+            ),
+            "citation": citation,
+        }
 
     # Fallback: if the extractor did not set scope3_mentioned (e.g. stub extractor),
     # infer from the extraction state so the decision tree still runs correctly.
@@ -270,6 +286,7 @@ def _assess_p6_completeness(p6_indicators: dict, schema_indicators: dict) -> dic
     essential_disclosed = []
     essential_partial   = []
     essential_not_found = []
+    essential_unassessed = []
 
     for ind_id in essential_ids:
         ind_state = p6_indicators.get(ind_id, {}).get("state", "not_found")
@@ -277,6 +294,8 @@ def _assess_p6_completeness(p6_indicators: dict, schema_indicators: dict) -> dic
             essential_disclosed.append(ind_id)
         elif ind_state == "partially_disclosed":
             essential_partial.append(ind_id)
+        elif ind_state == "extraction_error":
+            essential_unassessed.append(ind_id)
         else:
             essential_not_found.append(ind_id)
 
@@ -292,7 +311,9 @@ def _assess_p6_completeness(p6_indicators: dict, schema_indicators: dict) -> dic
     n_absent = len(essential_not_found)
 
     # Assign completeness state
-    if total == 0 or n_absent == total:
+    if essential_unassessed:
+        comp_state = "unassessed"
+    elif total == 0 or n_absent == total:
         comp_state = "not_found"
     elif n_disc == total:
         comp_state = "complete"
@@ -300,7 +321,12 @@ def _assess_p6_completeness(p6_indicators: dict, schema_indicators: dict) -> dic
         comp_state = "partial"
 
     # Citation string
-    if comp_state == "not_found":
+    if comp_state == "unassessed":
+        citation = (
+            "Principle 6 assessment incomplete because one or more essential "
+            "indicators could not be extracted"
+        )
+    elif comp_state == "not_found":
         citation = (
             "Not found in uploaded BRSR filing — "
             "Principle 6 essential indicators checked"
@@ -322,8 +348,10 @@ def _assess_p6_completeness(p6_indicators: dict, schema_indicators: dict) -> dic
         "essential_disclosed":  n_disc,
         "essential_partial":    n_part,
         "essential_not_found":  n_absent,
+        "essential_unassessed": len(essential_unassessed),
         "partial_indicators":   essential_partial,
         "not_found_indicators": essential_not_found,
+        "unassessed_indicators": essential_unassessed,
         "leadership_disclosed": leadership_disclosed,
     }
 
@@ -342,6 +370,35 @@ _PRIORITY = {
     "G-05": 40,
     "G-10": 50,
     "G-11": 60,
+}
+
+
+RECOMMENDED_ACTION_LIBRARY = {
+    "G-01": (
+        "Request a complete Scope 3 inventory for the latest reporting period, "
+        "including categories covered, reporting boundary, methodology, and "
+        "supporting calculations."
+    ),
+    "G-02": (
+        "Require disclosure of the GHG accounting standard, reporting boundary, "
+        "emissions factors, and assurance status used for reported emissions."
+    ),
+    "G-03": (
+        "Obtain the missing Principle 6 environmental data, including the reporting "
+        "period and boundary for energy, emissions, water, and waste metrics."
+    ),
+    "G-05": (
+        "Request a time-bound emissions-reduction target with its baseline year, "
+        "scope, reporting boundary, and implementation plan."
+    ),
+    "G-10": (
+        "Request emissions-intensity metrics alongside absolute GHG figures to enable "
+        "normalized supplier performance benchmarking."
+    ),
+    "G-11": (
+        "Request Scope 3 leadership disclosure, including the reporting boundary, "
+        "categories assessed, and current data-collection plan."
+    ),
 }
 
 
@@ -393,24 +450,27 @@ def _detect_gaps(
     if scope3_level in ("not_found", "claim_only", "materiality_claim"):
         if scope3_level == "materiality_claim":
             desc = (
-                "Supplier has formally stated that Scope 3 emissions are not material "
-                "to its operations. No quantified Scope 3 data is provided. The basis "
-                "for this materiality determination has not been independently verified "
-                "from this filing. Request the supplier's materiality assessment "
-                "documentation."
+                "The supplier states that Scope 3 emissions are not material, but the "
+                "filing does not provide a quantified inventory or the supporting "
+                "materiality assessment. This prevents the buyer from assessing whether "
+                "relevant value-chain emissions have been excluded from its Scope 3 "
+                "reporting boundary. Obtain the supplier's materiality assessment and "
+                "emissions-boundary documentation as part of ESG due diligence."
             )
         elif scope3_level == "claim_only":
             desc = (
-                "Supplier acknowledges Scope 3 emissions but does not provide a "
-                "quantified absolute figure usable for supply chain carbon accounting. "
-                "Intensity ratios and qualitative references do not satisfy Scope 3 "
-                "Ready classification."
+                "The supplier acknowledges Scope 3 emissions but does not disclose an "
+                "absolute figure that can be used in supply-chain carbon accounting. "
+                "Qualitative statements or intensity metrics alone do not allow the "
+                "buyer to aggregate emissions, assess coverage, or validate progress "
+                "against value-chain reporting requirements."
             )
         else:
             desc = (
-                "No Scope 3 emissions data was found in the uploaded BRSR filing. "
-                "Scope 3 data is required for the buyer's own value-chain disclosure "
-                "obligations and supply chain carbon inventory."
+                "No Scope 3 emissions disclosure was identified in the uploaded BRSR "
+                "filing. Without supplier-level value-chain data, the buyer cannot "
+                "reliably quantify this supplier's contribution to its own Scope 3 "
+                "inventory or complete proportionate ESG due diligence."
             )
         _add(
             "G-01",
@@ -430,10 +490,11 @@ def _detect_gaps(
             "Principle 6, Essential Indicator E-4",
             "critical",
             (
-                "No GHG accounting methodology is named in the filing "
-                "(e.g. GHG Protocol Corporate Standard, ISO 14064-1). "
-                "A named methodology is required for Scope 3 Ready classification "
-                "and is a prerequisite for audit-grade emissions disclosure."
+                "The filing does not identify a GHG accounting methodology, such as "
+                "the GHG Protocol Corporate Standard or ISO 14064-1. Without a stated "
+                "methodology, the buyer cannot assess the comparability, boundary, or "
+                "assurance-readiness of reported emissions for Scope 3 reporting and "
+                "supplier ESG due diligence."
             ),
             methodology.get(
                 "citation",
@@ -448,7 +509,7 @@ def _detect_gaps(
     # hence it only triggers when the situation is severe.
     n_disc  = completeness.get("essential_disclosed", 0)
     n_total = completeness.get("essential_total", 1)
-    if n_disc < 2 and n_total >= 4:
+    if completeness.get("state") != "unassessed" and n_disc < 2 and n_total >= 4:
         _add(
             "G-03",
             "Principle 6 environmental data severely incomplete",
@@ -456,8 +517,10 @@ def _detect_gaps(
             "critical",
             (
                 f"Only {n_disc} of {n_total} essential environmental indicators "
-                f"were found in this filing. Core GHG performance data is insufficient "
-                f"for a procurement ESG assessment."
+                f"were identified in the filing. This level of disclosure does not "
+                f"provide a sufficiently reliable environmental baseline for the buyer "
+                f"to evaluate operational ESG performance, emissions exposure, or "
+                f"supplier due-diligence risk."
             ),
             completeness.get("citation", "Principle 6, Section C checked"),
         )
@@ -471,10 +534,11 @@ def _detect_gaps(
             "Principle 6, Essential Indicator E-6",
             "critical",
             (
-                "No emissions reduction target was found in the filing. "
-                "Absence of a climate target is a material signal for buyers "
-                "with Net Zero or SBTi commitments who require supply chain "
-                "climate alignment."
+                "No emissions-reduction target was identified in the filing. The "
+                "absence of a target limits the buyer's ability to assess the "
+                "supplier's transition plan, monitor future decarbonisation progress, "
+                "or demonstrate alignment with Net Zero and science-based supply-chain "
+                "commitments."
             ),
             climate.get(
                 "citation",
@@ -500,10 +564,11 @@ def _detect_gaps(
             "Principle 6, Essential Indicator E-5",
             "notable",
             (
-                "Absolute GHG figures are disclosed but emission intensity metrics "
-                "(emissions per unit of revenue or production) are absent. "
-                "Intensity metrics enable year-on-year performance comparison "
-                "independent of production volume changes."
+                "The supplier discloses absolute GHG figures but no emissions-intensity "
+                "metric, such as emissions per unit of revenue or production. This "
+                "limits the buyer's ability to benchmark operational efficiency and "
+                "evaluate emissions performance over time independent of changes in "
+                "production volume."
             ),
             intensity.get(
                 "citation",
@@ -526,10 +591,10 @@ def _detect_gaps(
             "Principle 6, Leadership Indicator — Scope 3",
             "minor",
             (
-                "The Scope 3 leadership indicator was not addressed in this filing. "
-                "While voluntary, leadership indicators signal ESG maturity and are "
-                "increasingly expected by buyers with supply chain decarbonisation "
-                "commitments."
+                "The filing does not address the Scope 3 leadership indicator. While "
+                "voluntary, this disclosure helps a buyer evaluate the supplier's ESG "
+                "maturity and readiness to support supply-chain decarbonisation and "
+                "value-chain reporting expectations."
             ),
             scope3_ind.get(
                 "citation",
@@ -548,6 +613,29 @@ def _detect_gaps(
     ]
 
 
+def _generate_recommended_actions(gaps: list[dict]) -> list[dict]:
+    """Create deterministic procurement actions for the identified gaps."""
+    actions = []
+
+    for gap in gaps:
+        gap_id = gap.get("gap_id")
+        action = RECOMMENDED_ACTION_LIBRARY.get(
+            gap_id,
+            "Request supporting disclosure and evidence to address the identified "
+            "supplier ESG gap.",
+        )
+        actions.append(
+            {
+                "rank": gap.get("rank", len(actions) + 1),
+                "gap_id": gap_id,
+                "gap_name": gap.get("gap_name"),
+                "action": action,
+            }
+        )
+
+    return actions
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # SECTION 5 — NODE ENTRY POINT
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -557,7 +645,7 @@ def analysis_layer(state: AssessmentState) -> dict:
     Node 4: Classify Scope 3 readiness, assess completeness, detect gaps.
 
     Reads:  extracted_indicators, document_failure
-    Writes: scope3_verdict, completeness_results, gaps
+    Writes: scope3_verdict, completeness_results, gaps, recommended_actions
 
     This node does not read the source document. It operates entirely
     on the structured output produced by extract_indicators.
@@ -571,6 +659,7 @@ def analysis_layer(state: AssessmentState) -> dict:
             "scope3_verdict":       _empty_scope3_verdict(),
             "completeness_results": [],
             "gaps":                 [],
+            "recommended_actions":  [],
         }
 
     extracted = state.get("extracted_indicators", {})
@@ -583,6 +672,7 @@ def analysis_layer(state: AssessmentState) -> dict:
             "scope3_verdict":       _empty_scope3_verdict(),
             "completeness_results": [],
             "gaps":                 [],
+            "recommended_actions":  [],
         }
 
     # Load schema for indicator type metadata (essential vs leadership)
@@ -605,6 +695,7 @@ def analysis_layer(state: AssessmentState) -> dict:
 
     # ── 3. Gap detection ─────────────────────────────────────────────────────
     gaps = _detect_gaps(p6, scope3_verdict, p6_completeness)
+    recommended_actions = _generate_recommended_actions(gaps)
     print(f"[analysis_layer] Gaps detected: {len(gaps)}")
     for gap in gaps:
         print(f"  [{gap['severity'].upper():8}] {gap['gap_id']}: {gap['gap_name']}")
@@ -613,6 +704,7 @@ def analysis_layer(state: AssessmentState) -> dict:
         "scope3_verdict":       scope3_verdict,
         "completeness_results": completeness_results,
         "gaps":                 gaps,
+        "recommended_actions":  recommended_actions,
     }
 
 

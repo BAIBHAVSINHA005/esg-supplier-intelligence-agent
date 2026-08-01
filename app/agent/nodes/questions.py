@@ -3,20 +3,22 @@ from app.agent.state import AssessmentState
 
 QUESTION_LIBRARY = {
     "G-01": (
-        "Please provide Scope 3 greenhouse gas emissions data, "
-        "including categories covered, reporting boundary, "
-        "calculation methodology, and latest reporting period."
+        "Your uploaded BRSR filing does not provide a usable Scope 3 emissions "
+        "inventory. Please provide the latest Scope 3 emissions data, including "
+        "the reporting period, organisational and operational boundary, categories "
+        "covered, calculation methodology, and supporting calculation evidence."
     ),
     "G-02": (
-        "Please identify the greenhouse gas accounting methodology "
-        "used for emissions reporting (for example GHG Protocol, "
-        "ISO 14064-1, or equivalent standard)."
+        "Your uploaded BRSR filing does not identify the methodology used for GHG "
+        "reporting. Please confirm the applicable standard or protocol, reporting "
+        "period and boundary, emissions factors used, and any assurance or supporting "
+        "documentation available for buyer ESG due diligence."
     ),
     "G-03": (
-        "Please provide the missing Principle 6 environmental "
-        "disclosures, including energy consumption, Scope 1 and "
-        "Scope 2 emissions, water consumption, waste generation, "
-        "and related environmental performance indicators."
+        "Your uploaded BRSR filing contains limited Principle 6 environmental "
+        "disclosures. Please provide the latest reporting-period data and supporting "
+        "evidence for energy consumption, Scope 1 and Scope 2 emissions, water "
+        "consumption, waste generation, and the reporting boundary for each metric."
     ),
 }
 

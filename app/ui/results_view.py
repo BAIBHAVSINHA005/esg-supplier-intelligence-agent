@@ -9,6 +9,7 @@ def render_results_view() -> None:
     brief = analysis_result.get("brief", {})
     header = brief.get("header", {})
     scope3_verdict = brief.get("scope3_verdict") or {}
+    extraction_errors = brief.get("extraction_errors", [])
 
     st.title("ESG Intelligence Brief")
     st.success("Analysis completed successfully.")
@@ -24,6 +25,23 @@ def render_results_view() -> None:
 
     if hitl_flag:
         st.warning("Human review is required before acting on this brief.")
+
+    if extraction_errors:
+        st.warning(
+            "Some indicators could not be assessed because extraction failed. "
+            "They are not treated as missing disclosures."
+        )
+        st.table(
+            [
+                {
+                    "Indicator": error.get(
+                        "indicator_name", error.get("indicator_id", "")
+                    ),
+                    "Error": error.get("error_code", "extraction_error"),
+                }
+                for error in extraction_errors
+            ]
+        )
 
     st.subheader("Scope 3 Verdict")
     st.info(scope3_verdict.get("label", "No Scope 3 assessment available."))

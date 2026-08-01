@@ -3,7 +3,11 @@
 from app.agent.state import AssessmentState
 from app.schemas.loader import load_schema, get_indicators
 from app.extraction.llm_extractor import LLMExtractor
-from app.extraction.schemas import IndicatorExtractionResult, to_pipeline_dict
+from app.extraction.schemas import (
+    IndicatorExtractionResult,
+    make_error_result,
+    to_pipeline_dict,
+)
 
 
 def extract_indicators(state: AssessmentState) -> dict:
@@ -23,13 +27,13 @@ def extract_indicators(state: AssessmentState) -> dict:
     # If upstream nodes failed, skip extraction
     if state.get("document_failure", False):
         print("[extract_indicators] Upstream document failure — skipping extraction")
-        return {"extracted_indicators": {}}
+        return {"extracted_indicators": {}, "extraction_errors": []}
 
     retrieved_context = state.get("retrieved_context", {})
 
     if not retrieved_context:
         print("[extract_indicators] WARNING: No retrieved context found")
-        return {"extracted_indicators": {}}
+        return {"extracted_indicators": {}, "extraction_errors": []}
 
     # Load schema
     schema = load_schema("brsr_v2023")
@@ -45,8 +49,36 @@ def extract_indicators(state: AssessmentState) -> dict:
         f"{len(principle_6_indicators)} indicators"
     )
 
-    llm_extractor = LLMExtractor()
     principle_6_results = {}
+    extraction_errors = []
+
+    try:
+        llm_extractor = LLMExtractor()
+    except Exception as exc:
+        error_code = LLMExtractor._error_code_for(exc)
+        print(f"[extract_indicators] LLM client initialization failed: {exc}")
+        for indicator_id, indicator_def in principle_6_indicators.items():
+            error_result = make_error_result(
+                indicator_id=indicator_id,
+                citation=indicator_def.get("brsr_indicator_ref", ""),
+                error_code=error_code,
+                error_message=str(exc),
+            )
+            principle_6_results[indicator_id] = error_result
+            extraction_errors.append(
+                {
+                    "indicator_id": indicator_id,
+                    "indicator_name": indicator_def["name"],
+                    "error_code": error_code,
+                    "error_message": str(exc),
+                    "citation": error_result["citation"],
+                }
+            )
+
+        return {
+            "extracted_indicators": {"principle_6": principle_6_results},
+            "extraction_errors": extraction_errors,
+        }
 
     for indicator_id, indicator_def in principle_6_indicators.items():
         retrieval_result = retrieved_context.get(indicator_id, {})
@@ -71,6 +103,20 @@ def extract_indicators(state: AssessmentState) -> dict:
         else:
             principle_6_results[indicator_id] = extraction_result
 
+        normalized_result = principle_6_results[indicator_id]
+        if normalized_result.get("state") == "extraction_error":
+            extraction_errors.append(
+                {
+                    "indicator_id": indicator_id,
+                    "indicator_name": indicator_def["name"],
+                    "error_code": normalized_result.get(
+                        "error_code", "extraction_error"
+                    ),
+                    "error_message": normalized_result.get("error_message", ""),
+                    "citation": normalized_result.get("citation", ""),
+                }
+            )
+
     # Count results by state for logging
     state_counts = {}
 
@@ -83,5 +129,6 @@ def extract_indicators(state: AssessmentState) -> dict:
     return {
         "extracted_indicators": {
             "principle_6": principle_6_results
-        }
+        },
+        "extraction_errors": extraction_errors,
     }

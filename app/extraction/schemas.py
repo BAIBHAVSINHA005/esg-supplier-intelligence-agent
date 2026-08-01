@@ -31,6 +31,7 @@ DisclosureState = Literal[
     "disclosed",
     "partially_disclosed",
     "not_found",
+    "extraction_error",
 ]
 
 
@@ -120,6 +121,16 @@ class IndicatorExtractionResult(BaseModel):
         description="Optional indicator-specific semantic metadata for downstream rules.",
     )
 
+    error_code: Optional[str] = Field(
+        default=None,
+        description="Machine-readable extraction failure code when state is extraction_error.",
+    )
+
+    error_message: Optional[str] = Field(
+        default=None,
+        description="Extraction failure detail when state is extraction_error.",
+    )
+
 
 # ---------------------------------------------------------------------
 # Internal result returned by the extractor
@@ -170,6 +181,8 @@ def to_pipeline_dict(
         "extraction_method": "llm",
         "confidence": result.confidence,
         "uncertain": False,
+        "error_code": result.error_code,
+        "error_message": result.error_message,
     }
 
     if semantic_flags is not None:
@@ -185,6 +198,8 @@ def to_pipeline_dict(
 def make_error_result(
     indicator_id: str,
     citation: str = "",
+    error_code: str = "extraction_error",
+    error_message: str = "",
 ) -> dict:
     """
     Standard fallback result used when the LLM call fails.
@@ -194,11 +209,13 @@ def make_error_result(
 
     return {
         "indicator_id": indicator_id,
-        "state": "not_found",
+        "state": "extraction_error",
         "value": "",
         "evidence": "",
         "citation": citation,
         "extraction_method": "llm",
         "confidence": 0.0,
         "uncertain": True,
+        "error_code": error_code,
+        "error_message": error_message,
     }

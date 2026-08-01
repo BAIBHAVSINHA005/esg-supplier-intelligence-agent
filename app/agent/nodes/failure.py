@@ -50,7 +50,9 @@ def handle_failure(state: AssessmentState) -> dict:
         "completeness_assessment": [],
         "scope3_verdict": None,
         "gaps": [],
+        "recommended_actions": [],
         "followup_questions": [],
+        "extraction_errors": [],
     }
 
     return {

@@ -31,6 +31,7 @@ def compile_brief(state: AssessmentState) -> dict:
         completeness_assessment: completeness_results (from analysis_layer)
         scope3_verdict: (from analysis_layer)
         gaps: (from analysis_layer)
+        recommended_actions: (from analysis_layer)
         followup_questions: (from generate_questions)
         uncertain_fields: (from assess_confidence — used to render [⚠] markers)
 
@@ -55,8 +56,10 @@ def compile_brief(state: AssessmentState) -> dict:
         "completeness_assessment": state["completeness_results"],
         "scope3_verdict": state["scope3_verdict"],
         "gaps": state["gaps"],
+        "recommended_actions": state["recommended_actions"],
         "followup_questions": state["followup_questions"],
         "uncertain_fields": state["uncertain_fields"],
+        "extraction_errors": state["extraction_errors"],
         "status": "brief_generated",
     }
 

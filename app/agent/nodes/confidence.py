@@ -169,6 +169,16 @@ def _find_uncertain_fields(extracted: dict) -> list[str]:
     return sorted(uncertain)
 
 
+def _find_extraction_errors(extracted: dict) -> list[str]:
+    """Return the IDs of indicators that could not be assessed."""
+    errors = []
+    for principle_id, principle_indicators in extracted.items():
+        for indicator_id, indicator_data in principle_indicators.items():
+            if indicator_data.get("state") == "extraction_error":
+                errors.append(f"{principle_id}.{indicator_id}")
+    return sorted(errors)
+
+
 # ── Level determination ───────────────────────────────────────────────────────
 
 def _determine_level(
@@ -329,6 +339,17 @@ def assess_confidence(state: AssessmentState) -> dict:
     brsr_section_found   = state.get("brsr_section_found", True)
     extracted            = state.get("extracted_indicators", {})
     completeness_results = state.get("completeness_results", [])
+    extraction_errors    = state.get("extraction_errors", [])
+    error_fields         = _find_extraction_errors(extracted)
+
+    if extraction_errors or error_fields:
+        print("[assess_confidence] Extraction error - returning low confidence")
+        return {
+            "confidence_level": "low",
+            "confidence_directive": _DIRECTIVES["low"],
+            "hitl_flag": True,
+            "uncertain_fields": error_fields,
+        }
 
     # ── Compute derived signals ───────────────────────────────────────────────
     extraction_method = _detect_extraction_method(extracted)

@@ -142,6 +142,10 @@ class AssessmentState(TypedDict):
     # }
     # Used by: analysis_layer (all three classifiers read this).
 
+    extraction_errors: List[Dict]
+    # Extraction failures kept separate from confirmed not_found disclosures.
+    # Used by: analysis_layer, assess_confidence, compile_brief.
+
     # ── GROUP 5: ANALYSIS ──────────────────────────────────────────────────
     # Written by: analysis_layer
 
@@ -194,6 +198,10 @@ class AssessmentState(TypedDict):
     #   }
     # ]
     # Used by: generate_questions (derives questions from gaps); compile_brief.
+
+    recommended_actions: List[Dict]
+    # Deterministic procurement actions mapped from identified disclosure gaps.
+    # Used by: compile_brief.
 
     # ── GROUP 6: CONFIDENCE ────────────────────────────────────────────────
     # Written by: assess_confidence
@@ -293,11 +301,13 @@ def make_initial_state(
 
         # Extraction
         "extracted_indicators": {},
+        "extraction_errors": [],
 
         # Analysis
         "scope3_verdict": {},
         "completeness_results": [],
         "gaps": [],
+        "recommended_actions": [],
 
         # Confidence
         "confidence_level": "low",
