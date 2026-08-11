@@ -14,6 +14,14 @@ def render_results_view() -> None:
     st.title("ESG Intelligence Brief")
     st.success("Analysis completed successfully.")
 
+    st.subheader("Executive Summary")
+    st.write(
+        brief.get(
+            "executive_summary",
+            "No executive summary is available for this assessment.",
+        )
+    )
+
     supplier_column, confidence_column, hitl_column = st.columns(3)
     supplier_column.metric("Supplier Name", header.get("supplier_name", "Unknown"))
     confidence_column.metric(
@@ -25,6 +33,14 @@ def render_results_view() -> None:
 
     if hitl_flag:
         st.warning("Human review is required before acting on this brief.")
+
+    st.subheader("Confidence Explanation")
+    st.info(
+        brief.get(
+            "confidence_explanation",
+            header.get("confidence_directive", "No confidence explanation available."),
+        )
+    )
 
     if extraction_errors:
         st.warning(
@@ -45,6 +61,14 @@ def render_results_view() -> None:
 
     st.subheader("Scope 3 Verdict")
     st.info(scope3_verdict.get("label", "No Scope 3 assessment available."))
+
+    st.subheader("Scope 3 Assessment Narrative")
+    st.write(
+        brief.get(
+            "scope3_assessment_narrative",
+            "No Scope 3 assessment narrative is available.",
+        )
+    )
 
     st.subheader("Scope 3 Evidence")
     st.info(scope3_verdict.get("evidence", "No Scope 3 evidence available."))
@@ -79,7 +103,7 @@ def render_results_view() -> None:
                 {
                     "Gap": gap.get("gap_name", ""),
                     "Severity": gap.get("severity", ""),
-                    "Description": gap.get("description", ""),
+                    "Why it matters": gap.get("description", ""),
                 }
                 for gap in gaps
             ]

@@ -31,7 +31,7 @@ def assess_supplier(pdf_file):
 
     header = brief.get("header", {})
 
-    scope3 = brief.get("scope3_verdict", {})
+    scope3 = brief.get("scope3_verdict") or {}
 
     completeness = brief.get(
         "completeness_assessment",
@@ -49,6 +49,15 @@ def assess_supplier(pdf_file):
 
     report.append("# ESG Supplier Intelligence Brief")
 
+    report.append("\n## Executive Summary")
+
+    report.append(
+        brief.get(
+            "executive_summary",
+            "No executive summary is available for this assessment.",
+        )
+    )
+
     report.append(
         f"\nSupplier: {header.get('supplier_name', 'Unknown')}"
     )
@@ -63,6 +72,15 @@ def assess_supplier(pdf_file):
         f"{header.get('hitl_flag', False)}"
     )
 
+    report.append("\n## Confidence Explanation")
+
+    report.append(
+        brief.get(
+            "confidence_explanation",
+            header.get("confidence_directive", "No confidence explanation available."),
+        )
+    )
+
     report.append("\n---")
 
     # Scope 3
@@ -73,6 +91,15 @@ def assess_supplier(pdf_file):
         scope3.get(
             "label",
             "No Scope 3 assessment available"
+        )
+    )
+
+    report.append("\n### Scope 3 Assessment Narrative")
+
+    report.append(
+        brief.get(
+            "scope3_assessment_narrative",
+            "No Scope 3 assessment narrative is available.",
         )
     )
 

@@ -220,6 +220,12 @@ class AssessmentState(TypedDict):
     # Future: one of three fixed strings defined in nodes/confidence.py.
     # Used by: compile_brief; Streamlit confidence_banner component.
 
+    confidence_explanation: str
+    # Plain-language explanation produced from the same signals and decision
+    # path used to assign confidence_level. Presentation-only; it does not
+    # participate in confidence scoring.
+    # Used by: compile_brief and report views.
+
     hitl_flag: bool
     # True when the brief requires human review before being acted on.
     # Placeholder: False
@@ -312,6 +318,7 @@ def make_initial_state(
         # Confidence
         "confidence_level": "low",
         "confidence_directive": "",
+        "confidence_explanation": "",
         "hitl_flag": False,
         "uncertain_fields": [],
 

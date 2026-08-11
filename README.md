@@ -1,316 +1,174 @@
 # Supplier ESG Intelligence Agent
 
-An AI-powered document intelligence system that transforms a supplier's **Business Responsibility and Sustainability Report (BRSR)** into a structured **ESG Intelligence Brief** in under 90 seconds.
+An evidence-grounded AI workflow that turns a supplier's Indian Business
+Responsibility and Sustainability Report (BRSR) into a procurement-ready ESG
+Intelligence Brief.
 
-The project combines **LangGraph**, **Retrieval-Augmented Generation (RAG)**, **LLM-based information extraction**, and **deterministic ESG analysis** to automate supplier sustainability assessments.
+Built as a portfolio project for applied AI and document-intelligence work, it
+combines RAG, structured LLM extraction, deterministic ESG rules, and explicit
+reliability controls. The aim is not to replace analyst judgement; it is to
+give procurement teams a faster, traceable starting point for Scope 3 reporting
+and supplier ESG due diligence.
 
----
+## Why it matters
 
-# Business Problem
+Supplier sustainability filings contain decision-relevant information, but it
+is often buried in long PDFs and reported inconsistently. A buyer needs more
+than a text summary: it needs evidence, a clear distinction between a missing
+disclosure and a failed extraction, and follow-up questions that can be sent to
+the supplier.
 
-Organizations increasingly require ESG assessments of suppliers to support:
+This project produces a structured brief containing:
 
-- Scope 3 emissions reporting
-- Supplier onboarding
-- Procurement risk assessment
-- ESG due diligence
-- Sustainability compliance
+- Scope 3 readiness verdict and supporting evidence
+- Principle 6 completeness assessment
+- Deterministically identified ESG disclosure gaps
+- Recommended procurement actions and supplier follow-up questions
+- Confidence level and a human-in-the-loop (HITL) flag
 
-Today, ESG analysts often spend **45–90 minutes** manually reviewing a single supplier's sustainability report.
+## Current assessment scope
 
-This project automates that workflow by extracting ESG disclosures, evaluating disclosure completeness, identifying reporting gaps, and generating an evidence-backed ESG Intelligence Brief within minutes.
+The current release accepts machine-readable BRSR PDFs and assesses
+**BRSR Principle 6: Environment**. It covers nine indicators:
 
----
+| Area | Indicators |
+| --- | --- |
+| Energy and emissions | Total energy consumption; Scope 1 and Scope 2 GHG emissions; GHG accounting methodology; GHG emissions intensity |
+| Value-chain climate data | Scope 3 GHG emissions (leadership indicator); climate or emissions-reduction target |
+| Resources and waste | Water consumption; total waste generated |
 
-# Solution
+The intended use cases are supplier onboarding, procurement risk assessment,
+Scope 3 data collection, and ESG due diligence.
 
-The Supplier ESG Intelligence Agent performs an end-to-end ESG document analysis pipeline.
-
-## Workflow
-
-1. Upload a supplier BRSR PDF
-2. Assess document quality
-3. Detect the reporting framework
-4. Index the document into a vector database
-5. Retrieve relevant evidence using RAG
-6. Extract ESG indicators using an LLM
-7. Perform deterministic ESG analysis
-8. Detect disclosure gaps
-9. Assess Scope 3 reporting readiness
-10. Generate supplier follow-up questions
-11. Produce a structured ESG Intelligence Brief
-
-All findings are traceable to supporting evidence retrieved from the source document.
-
----
-
-## Latest Updates
-
-### MVP 3.1.5 – Document-Level Retrieval Isolation
-
-The retrieval layer now supports document-scoped semantic search.
-
-Previously, all uploaded ESG reports shared a single Chroma collection without document identity, allowing semantically similar chunks from unrelated reports to be retrieved.
-
-Each indexed chunk now stores a UUID `document_id`, and retrieval is constrained using Chroma metadata filtering.
-
-This ensures retrieval is isolated to the currently uploaded ESG report while retaining a single shared Chroma collection.
-
-# Current Architecture (v0.3.1)
+## How it works
 
 ```text
-Upload PDF
-      │
-      ▼
-Document Parser
-      │
-      ▼
-Chunking
-      │
-      ▼
-Embedding
-      │
-      ▼
-ChromaDB
-(page + document_id metadata)
-      │
-      ▼
-Metadata Filter
-(document_id)
-      │
-      ▼
-Top-k Semantic Retrieval
-      │
-      ▼
-LLM Extraction
-      │
-      ▼
-Analysis Layer
-      │
-      ▼
-ESG Intelligence Brief
+Streamlit UI
+  -> supplier assessment service
+  -> compiled LangGraph workflow
+       -> PDF ingestion and page-level chunking
+       -> Chroma indexing
+       -> document quality and BRSR checks
+       -> document-scoped semantic retrieval
+       -> LLM indicator extraction
+       -> deterministic ESG analysis
+       -> confidence and HITL decision
+       -> supplier questions
+       -> compiled ESG Intelligence Brief
 ```
 
----
-
-# Current Status
-
-**Latest Release:** **v0.3.1**
-
-### Completed Features
-
-- ✅ PDF ingestion
-- ✅ Document quality assessment
-- ✅ BRSR framework detection
-- ✅ PDF chunking
-- ✅ ChromaDB vector database
-- ✅ Retrieval-Augmented Generation (RAG)
-- ✅ OpenAI embedding-based retrieval
-- ✅ LLM-driven ESG indicator extraction
-- ✅ Semantic metadata extraction
-- ✅ Deterministic ESG analysis
-- ✅ Gap detection
-- ✅ Scope 3 readiness assessment
-- ✅ Supplier follow-up question generation
-- ✅ Structured ESG Intelligence Brief generation
-- ✅ Gradio web interface
-- ✅ LangGraph workflow orchestration
-- ✅ Regression tests for semantic extraction
-
----
-
-# Key Features
-
-- Retrieval-Augmented Generation (RAG)
-- Evidence-backed ESG extraction
-- Semantic metadata extraction
-- Structured ESG indicator mapping
-- Deterministic post-processing
-- Disclosure gap analysis
-- Scope 3 readiness assessment
-- Supplier intelligence report generation
-- Interactive Gradio interface
-
----
-
-# Tech Stack
-
-## AI & LLM
-
-- OpenAI GPT
-- LangChain
-- LangGraph
-
-## Retrieval
-
-- ChromaDB
-- OpenAI Embeddings
-
-## Backend
-
-- Python
-- Pydantic
-- PyMuPDF
-
-## User Interface
-
-- Gradio
-
-## Testing
-
-- Pytest
-
----
-
-# Project Structure
+The success path in LangGraph is:
 
 ```text
-app/
-│
-├── ingestion/
-├── retrieval/
-├── extraction/
-├── analysis/
-├── ui/
-├── schemas/
-└── workflow/
-
-tests/
-
-docs/
-
-data/
-
-research/
-
-README.md
-CHANGELOG.md
-requirements.txt
+ingest_document -> index_document -> quality_check -> retrieve_context
+-> extract_indicators -> analysis_layer -> assess_confidence
+-> generate_questions -> compile_brief
 ```
 
----
-## Technical Highlights
+If a PDF is not machine-readable or its BRSR section cannot be located, the
+workflow returns a minimal failure brief rather than continuing with an
+unreliable assessment.
 
-- LangGraph orchestration
-- ChromaDB vector database
-- OpenAI GPT-4.1 structured extraction
-- Sentence Transformer embeddings
-- Document-level retrieval isolation using Chroma metadata filtering
-- ESG Principle 6 indicator extraction
-- Confidence assessment
-- Gap analysis
-- Automated follow-up question generation
+## Design decisions that make the workflow reliable
 
+### 1. Document-scoped retrieval isolation
 
-### Agent Engineering
-
-- LangGraph state management
-- Multi-stage AI workflows
-- Conditional routing
-- Modular pipeline architecture
-
-### Retrieval-Augmented Generation
-
-- Document chunking
-- Embedding generation
-- Vector search
-- Context-aware retrieval
-
-### Document AI
-
-- PDF parsing
-- ESG information extraction
-- Evidence grounding
-- Structured data generation
-
-### Software Engineering
-
-- PRD-driven development
-- Modular architecture
-- Regression testing
-- Versioned releases
-- Git-based milestone tracking
-
----
-
-# Next Milestone
-
-# Next Milestone
-
-## MVP 3.2 – User Experience & Deployment
-
-Planned improvements:
-
-- Streamlit-based production UI
-- Improved visualization of ESG Intelligence Brief
-- Better progress tracking during analysis
-- Retrieval quality evaluation
-- OpenAI rate-limit handling with retries
-
----
-
-# Screenshots
-
-*(To be added)*
-
-- Upload Interface
-- ESG Intelligence Brief
-- Workflow Visualization
-
----
-
-# Release History
-
-See **CHANGELOG.md** for:
-
-- Version history
-- Development milestones
-- Bug fixes
-- Engineering decisions
-- Planned improvements
-
----
-
-# Author
-
-**Baibhav Anand**
-
-Communication and Marketing professional transitioning into AI, Analytics, and Agentic AI Engineering.
-
-Currently building enterprise AI applications using:
-
-- Python
-- LangGraph
-- Retrieval-Augmented Generation (RAG)
-- Model Context Protocol (MCP)
-- Agentic AI workflows
-
-GitHub portfolio showcasing AI, analytics, and intelligent document processing projects.
-
-
-
-## Engineering Decisions
-
-### Document-Level Retrieval Isolation
-
-Instead of maintaining one vector collection per uploaded document, the application stores all document embeddings in a shared Chroma collection.
-
-Each chunk is tagged with a UUID `document_id`.
-
-Retrieval is constrained using Chroma metadata filtering:
-
-This design prevents cross-document retrieval contamination while preserving a single shared vector collection.
+The application uses a single ChromaDB collection, `esg_document_chunks`, but
+tags each chunk with a UUID `document_id` and its source page. Retrieval filters
+on the active document:
 
 ```python
 where={"document_id": document_id}
+```
 
-## Engineering Lessons
+This prevents chunks from one supplier filing being retrieved for another.
+`document_id` belongs only to the retrieval subsystem; `assessment_id` remains
+the separate business-workflow identifier.
 
-During development, the retrieval layer was refactored to support document-level isolation.
+### 2. Absence is not the same as an extraction failure
 
-The project now distinguishes between:
+The pipeline carries two distinct states through to the brief:
 
-- `document_id` – retrieval infrastructure
-- `assessment_id` – business workflow
+| State | Meaning | Effect on analysis |
+| --- | --- | --- |
+| `not_found` | The model completed its assessment of the retrieved evidence and did not identify the disclosure. | Existing deterministic gap rules may apply. |
+| `extraction_error` | Extraction failed because of an API, rate-limit, authentication, connection, timeout, parsing, or validation issue. | The indicator is unassessed, is not treated as absent, and does not create a false ESG gap. |
 
-This separation improves maintainability, enables metadata-based filtering, and provides a foundation for future document caching and retrieval optimization.
+When any extraction error exists, the workflow forces **LOW** confidence and
+sets the **HITL** flag. The brief and Streamlit UI explicitly warn that affected
+indicators were not assessed. Essential Principle 6 extraction errors also make
+the completeness result unassessed rather than incomplete.
+
+### 3. Targeted OpenAI rate-limit recovery
+
+Only `RateLimitError` is retried, for a maximum of three total attempts. The
+implementation disables SDK automatic retries so this is the only retry policy.
+
+1. Read `Retry-After` and rate-limit reset headers.
+2. Extract a requested wait time from the exception message when needed.
+3. Use the longest server-provided delay plus a one-second safety buffer.
+4. Fall back to exponential backoff only when no server delay is available.
+5. Return `extraction_error` after the final failed attempt.
+
+This avoids retrying earlier than the API instructs and prevents a transient API
+failure from being misclassified as an ESG disclosure gap.
+
+## Validation
+
+- **10 automated tests passing**: semantic extraction, extraction-error
+  propagation, gap suppression, confidence/HITL behavior, and rate-limit retry
+  handling.
+- **Reliance BRSR end-to-end validation completed**: document-scoped retrieval
+  and Principle 6 structured extraction were verified in a full workflow run.
+
+## Technology
+
+| Layer | Implementation |
+| --- | --- |
+| Workflow orchestration | LangGraph |
+| LLM extraction | OpenAI Responses API with Pydantic validation |
+| Retrieval | ChromaDB with `all-MiniLM-L6-v2` sentence-transformer embeddings |
+| Document processing | Python and PyMuPDF |
+| User interface | Streamlit |
+| Tests | Python `unittest` |
+
+## Repository layout
+
+```text
+app/
+|-- agent/        # LangGraph state, routing, nodes, and compiled graph
+|-- extraction/   # PDF parsing, BRSR detection, prompts, and LLM extraction
+|-- rag/          # Chunking, embeddings, Chroma indexing, and retrieval
+|-- schemas/      # BRSR indicator schema
+|-- services/     # Assessment service boundary
+`-- ui/           # Streamlit presentation layer
+
+tests/            # Regression and reliability tests
+```
+
+## Current limitations
+
+- BRSR filings only; other ESG reporting frameworks are not yet supported.
+- Principle 6 only; the remaining BRSR principles are out of scope today.
+- LLM indicator extraction is sequential.
+- Large reports remain sensitive to OpenAI tokens-per-minute limits, although
+  targeted rate-limit recovery is in place.
+- Persistence and API deployment have not yet been implemented.
+
+## Roadmap
+
+1. Improve brief narrative quality.
+2. Validate the workflow across three supplier filings.
+3. Polish the Streamlit experience.
+4. Add a FastAPI service layer.
+5. Containerize with Docker.
+6. Add persistence.
+
+## Author
+
+**Baibhav Anand** is a communication and marketing professional transitioning
+into AI, analytics, and agentic AI engineering. This project demonstrates
+applied Python, LangGraph, RAG, structured LLM extraction, deterministic rules,
+and reliability-focused document intelligence design.
+
+See `CHANGELOG.md` for milestone history and engineering decisions.

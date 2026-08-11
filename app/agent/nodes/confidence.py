@@ -11,6 +11,7 @@
 #
 # Writes:  confidence_level
 #          confidence_directive
+#          confidence_explanation
 #          hitl_flag
 #          uncertain_fields
 #
@@ -224,15 +225,15 @@ def _determine_level(
     if not is_machine_readable:
         return (
             "low",
-            "Document is not machine-readable. Text extraction produced "
-            f"{doc_score:.2f} document quality score.",
+            "the document is not machine-readable "
+            f"(document-quality score {doc_score:.2f})",
         )
 
     if not brsr_section_found:
         return (
             "low",
-            "BRSR section could not be identified in the uploaded document. "
-            f"Document quality score: {doc_score:.2f}.",
+            "the BRSR section could not be identified "
+            f"(document-quality score {doc_score:.2f})",
         )
 
     # ── Check 2: Real extraction with poor indicator coverage → LOW ───────────
@@ -240,9 +241,9 @@ def _determine_level(
         if extraction_ratio < _EXTR_RATIO_LOW_THRESHOLD:
             return (
                 "low",
-                f"Only {extraction_ratio:.0%} of essential indicators were located. "
-                f"Minimum for reliable assessment is {_EXTR_RATIO_LOW_THRESHOLD:.0%}. "
-                f"Document quality: {doc_score:.2f}.",
+                f"essential-indicator coverage was only {extraction_ratio:.0%}, "
+                f"below the {_EXTR_RATIO_LOW_THRESHOLD:.0%} reliability threshold "
+                f"(document-quality score {doc_score:.2f})",
             )
 
     # ── Check 3: All quality signals strong → HIGH ────────────────────────────
@@ -257,26 +258,35 @@ def _determine_level(
     ):
         return (
             "high",
-            f"Document quality {doc_score:.2f}, extraction ratio "
-            f"{extraction_ratio:.0%}, no uncertain findings.",
+            f"document quality scored {doc_score:.2f}, essential-indicator coverage "
+            f"was {extraction_ratio:.0%}, and no findings were marked uncertain",
         )
 
     # ── Check 4: Default → MEDIUM ─────────────────────────────────────────────
     if is_stub:
         rationale = (
-            f"Stub extraction — real extraction not yet performed. "
-            f"Document quality score: {doc_score:.2f}."
+            "automated extraction was not completed "
+            f"(document-quality score {doc_score:.2f})"
         )
     elif extraction_ratio is not None:
+        uncertain_count = len(uncertain_fields)
+        if uncertain_count:
+            finding_label = "finding" if uncertain_count == 1 else "findings"
+            final_signal = (
+                f"{uncertain_count} {finding_label} require source verification"
+            )
+        else:
+            final_signal = (
+                "the combined quality and coverage signals do not support High confidence"
+            )
         rationale = (
-            f"Document quality {doc_score:.2f}, extraction ratio "
-            f"{extraction_ratio:.0%}, {len(uncertain_fields)} uncertain "
-            f"field(s) require verification."
+            f"document quality scored {doc_score:.2f}, essential-indicator coverage "
+            f"was {extraction_ratio:.0%}, and {final_signal}"
         )
     else:
         rationale = (
-            f"Document quality {doc_score:.2f}. "
-            f"Extraction ratio not available."
+            f"document quality scored {doc_score:.2f}, but essential-indicator "
+            "coverage was unavailable"
         )
 
     return "medium", rationale
@@ -313,11 +323,13 @@ def _determine_hitl_flag(
 
 def assess_confidence(state: AssessmentState) -> dict:
     """
-    Node 5: Compute confidence level, directive, HITL flag, and uncertain fields.
+    Node 5: Compute confidence level, directive, explanation, HITL flag, and
+    uncertain fields.
 
     Reads:  extraction_confidence_score, is_machine_readable, brsr_section_found,
             extracted_indicators, completeness_results, document_failure
-    Writes: confidence_level, confidence_directive, hitl_flag, uncertain_fields
+    Writes: confidence_level, confidence_directive, confidence_explanation,
+            hitl_flag, uncertain_fields
     """
     print("[assess_confidence]")
 
@@ -329,6 +341,10 @@ def assess_confidence(state: AssessmentState) -> dict:
         return {
             "confidence_level":     "low",
             "confidence_directive": _DIRECTIVES["low"],
+            "confidence_explanation": (
+                "Low confidence — document processing failed, so the assessment "
+                "could not be completed."
+            ),
             "hitl_flag":            True,
             "uncertain_fields":     [],
         }
@@ -347,6 +363,10 @@ def assess_confidence(state: AssessmentState) -> dict:
         return {
             "confidence_level": "low",
             "confidence_directive": _DIRECTIVES["low"],
+            "confidence_explanation": (
+                "Low confidence — one or more indicators could not be extracted; "
+                "the affected findings require source review."
+            ),
             "hitl_flag": True,
             "uncertain_fields": error_fields,
         }
@@ -393,6 +413,7 @@ def assess_confidence(state: AssessmentState) -> dict:
     return {
         "confidence_level":     level,
         "confidence_directive": _DIRECTIVES[level],
+        "confidence_explanation": f"{level.title()} confidence — {rationale}.",
         "hitl_flag":            hitl_flag,
         "uncertain_fields":     uncertain_fields,
     }

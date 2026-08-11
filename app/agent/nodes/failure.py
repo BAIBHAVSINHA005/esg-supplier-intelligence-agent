@@ -33,6 +33,12 @@ def handle_failure(state: AssessmentState) -> dict:
     print(f"[handle_failure] Document could not be processed: {failure_reason}")
 
     brief = {
+        "executive_summary": (
+            f"The assessment of {state['supplier_name']} could not be completed "
+            "because the uploaded document failed processing checks. No ESG or "
+            "Scope 3 conclusion should be drawn from this output; human review is "
+            "required."
+        ),
         "disclaimer": FAILURE_DISCLAIMER,
         "header": {
             "supplier_name": state["supplier_name"],
@@ -49,6 +55,14 @@ def handle_failure(state: AssessmentState) -> dict:
         "error": failure_reason,
         "completeness_assessment": [],
         "scope3_verdict": None,
+        "scope3_assessment_narrative": (
+            "Scope 3 could not be assessed because document processing failed. "
+            "This is an unassessed result, not evidence that disclosure is absent."
+        ),
+        "confidence_explanation": (
+            "Low confidence — document processing failed, so the assessment could "
+            "not be completed."
+        ),
         "gaps": [],
         "recommended_actions": [],
         "followup_questions": [],
