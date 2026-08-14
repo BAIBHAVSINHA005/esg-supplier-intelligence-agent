@@ -34,7 +34,12 @@ def ingest_document(state: AssessmentState) -> dict:
 
     try:
         full_text, chunks, num_pages = extract_text_from_bytes(pdf_bytes)
-        chunks = enhance_chunks(chunks)
+        chunks = enhance_chunks(
+            chunks,
+            source_filename=state.get("source_filename"),
+            assessment_id=state.get("assessment_id"),
+            document_id=state.get("document_id"),
+        )
         #debugging
         print(f"[ingest_document] Enhanced {len(chunks)} chunks")
         print(f"[ingest_document] Extracted {len(full_text):,} chars from {num_pages} pages")

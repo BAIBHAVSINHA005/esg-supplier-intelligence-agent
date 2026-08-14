@@ -3,6 +3,7 @@
 import gradio as gr
 from pathlib import Path
 
+from app.agent.evidence import format_reference
 from app.services.supplier_assessment import run_supplier_assessment
 
 
@@ -43,6 +44,17 @@ def assess_supplier(pdf_file):
     questions = brief.get(
         "followup_questions",
         []
+    )
+
+    evidence_register = brief.get("evidence_register", [])
+
+    scope3_evidence = next(
+        (
+            entry
+            for entry in evidence_register
+            if entry.get("indicator_id") == "e6_scope3_emissions"
+        ),
+        {},
     )
 
     report = []
@@ -103,12 +115,54 @@ def assess_supplier(pdf_file):
         )
     )
 
-    evidence = scope3.get("evidence", "")
+    evidence_status = scope3_evidence.get("evidence_status")
+    if evidence_status == "not_found":
+        report.append("No supporting evidence excerpt: Scope 3 was not found.")
+    elif evidence_status == "extraction_error":
+        report.append("No supporting evidence excerpt: extraction failed.")
+    else:
+        report.append(
+            scope3_evidence.get("evidence_excerpt")
+            or scope3.get("evidence", "No Scope 3 evidence excerpt is available.")
+        )
 
-    if len(evidence) > 150:
-        evidence = evidence[:150] + "..."
+    scope3_reference = format_reference(
+        scope3_evidence.get("citation") or scope3.get("citation"),
+        scope3_evidence.get("assessment_reference"),
+    )
+    report.append(f"Reference: {scope3_reference}")
 
-    report.append(evidence)
+    for location in scope3_evidence.get("source_locations", []):
+        page = location.get("page", "unavailable")
+        chunk_id = location.get("chunk_id")
+        chunk_text = f", chunk {chunk_id}" if chunk_id else ""
+        report.append(f"Matched source: page {page}{chunk_text}")
+
+    report.append("\n## Evidence Register")
+
+    for entry in evidence_register:
+        reference = format_reference(
+            entry.get("citation"), entry.get("assessment_reference")
+        )
+        sources = "; ".join(
+            (
+                f"page {location.get('page')}"
+                if location.get("page") is not None
+                else "page unavailable"
+            )
+            + (
+                f" / chunk {location.get('chunk_id')}"
+                if location.get("chunk_id")
+                else ""
+            )
+            for location in entry.get("source_locations", [])
+        ) or "—"
+        report.append(
+            f"\n- {entry.get('indicator_name', entry.get('indicator_id', ''))}: "
+            f"{entry.get('state', 'unknown')} | evidence status: "
+            f"{entry.get('evidence_status', 'unknown')} | reference: {reference} | "
+            f"matched sources: {sources}"
+        )
 
     # Completeness
 
@@ -142,7 +196,8 @@ def assess_supplier(pdf_file):
     for gap in gaps:
 
         report.append(
-            f"\n• {gap['gap_name']}"
+            f"\n• {gap['gap_name']} — "
+            f"{format_reference(gap.get('citation'), gap.get('brsr_reference'))}"
         )
 
     # Questions
@@ -153,8 +208,12 @@ def assess_supplier(pdf_file):
 
     for i, q in enumerate(questions, start=1):
 
+        question_reference = format_reference(
+            q.get("reference") or q.get("citation")
+        )
         report.append(
-            f"\n{i}. {q['question']}"
+            f"\n{i}. [{q.get('linked_gap_id', q.get('gap_id', ''))}] "
+            f"{q['question']}\n   Reference: {question_reference}"
         )
 
     return "\n".join(report)

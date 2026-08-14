@@ -21,11 +21,16 @@ Why this model?
 from sentence_transformers import SentenceTransformer
 
 
-# Load once when module starts.
-#
-# Avoid loading the model repeatedly.
-#
-_model = SentenceTransformer("all-MiniLM-L6-v2")
+# Load once on first use. Importing retrieval utilities should not allocate the
+# model when callers provide or mock embeddings themselves.
+_model = None
+
+
+def _get_model() -> SentenceTransformer:
+    global _model
+    if _model is None:
+        _model = SentenceTransformer("all-MiniLM-L6-v2")
+    return _model
 
 
 def get_embedding(text: str) -> list[float]:
@@ -44,6 +49,6 @@ def get_embedding(text: str) -> list[float]:
         list[float]
     """
 
-    vector = _model.encode(text)
+    vector = _get_model().encode(text)
 
     return vector.tolist()

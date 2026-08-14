@@ -2,6 +2,8 @@
 
 import streamlit as st
 
+from app.agent.evidence import format_reference
+
 
 def render_results_view() -> None:
     """Render the completed ESG Intelligence Brief."""
@@ -10,6 +12,15 @@ def render_results_view() -> None:
     header = brief.get("header", {})
     scope3_verdict = brief.get("scope3_verdict") or {}
     extraction_errors = brief.get("extraction_errors", [])
+    evidence_register = brief.get("evidence_register", [])
+    scope3_evidence = next(
+        (
+            entry
+            for entry in evidence_register
+            if entry.get("indicator_id") == "e6_scope3_emissions"
+        ),
+        {},
+    )
 
     st.title("ESG Intelligence Brief")
     st.success("Analysis completed successfully.")
@@ -71,7 +82,74 @@ def render_results_view() -> None:
     )
 
     st.subheader("Scope 3 Evidence")
-    st.info(scope3_verdict.get("evidence", "No Scope 3 evidence available."))
+    scope3_status = scope3_evidence.get("evidence_status")
+    if scope3_status == "not_found":
+        st.info("No supporting evidence excerpt is available because Scope 3 was not found.")
+    elif scope3_status == "extraction_error":
+        st.warning("No supporting evidence excerpt is available because extraction failed.")
+    else:
+        st.info(
+            scope3_evidence.get("evidence_excerpt")
+            or scope3_verdict.get("evidence")
+            or "No Scope 3 evidence excerpt is available."
+        )
+
+    scope3_reference = format_reference(
+        scope3_evidence.get("citation") or scope3_verdict.get("citation"),
+        scope3_evidence.get("assessment_reference"),
+    )
+    st.caption(f"Reference: {scope3_reference}")
+
+    if scope3_evidence.get("source_locations"):
+        st.caption(
+            "Matched source: "
+            + ", ".join(
+                (
+                    f"page {location.get('page')}"
+                    if location.get("page") is not None
+                    else "page unavailable"
+                )
+                + (
+                    f", chunk {location.get('chunk_id')}"
+                    if location.get("chunk_id")
+                    else ""
+                )
+                for location in scope3_evidence["source_locations"]
+            )
+        )
+
+    st.subheader("Evidence Register")
+    if evidence_register:
+        st.table(
+            [
+                {
+                    "Indicator": entry.get("indicator_name", entry.get("indicator_id", "")),
+                    "State": entry.get("state", "unknown"),
+                    "Evidence status": entry.get("evidence_status", "unknown"),
+                    "Evidence excerpt": entry.get("evidence_excerpt") or "—",
+                    "Reference": format_reference(
+                        entry.get("citation"), entry.get("assessment_reference")
+                    ),
+                    "Matched sources": "; ".join(
+                        (
+                            f"page {location.get('page')}"
+                            if location.get("page") is not None
+                            else "page unavailable"
+                        )
+                        + (
+                            f" / chunk {location.get('chunk_id')}"
+                            if location.get("chunk_id")
+                            else ""
+                        )
+                        for location in entry.get("source_locations", [])
+                    )
+                    or "—",
+                }
+                for entry in evidence_register
+            ]
+        )
+    else:
+        st.info("No indicator-level evidence metadata is available.")
 
     st.subheader("Completeness Assessment")
     completeness = brief.get("completeness_assessment", [])
@@ -104,6 +182,9 @@ def render_results_view() -> None:
                     "Gap": gap.get("gap_name", ""),
                     "Severity": gap.get("severity", ""),
                     "Why it matters": gap.get("description", ""),
+                    "Reference": format_reference(
+                        gap.get("citation"), gap.get("brsr_reference")
+                    ),
                 }
                 for gap in gaps
             ]
@@ -118,7 +199,11 @@ def render_results_view() -> None:
             [
                 {
                     "Rank": question.get("rank", ""),
+                    "Gap": question.get("linked_gap_id", question.get("gap_id", "")),
                     "Question": question.get("question", ""),
+                    "Reference": format_reference(
+                        question.get("reference") or question.get("citation")
+                    ),
                 }
                 for question in questions
             ]

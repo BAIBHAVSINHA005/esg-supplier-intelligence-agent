@@ -37,15 +37,27 @@ def index_chunks(chunks, document_id: str):
 
     for chunk in chunks:
 
+        metadata = {
+            "page": chunk["page"],
+            "document_id": document_id,
+        }
+        for metadata_key in (
+            "source_filename",
+            "assessment_id",
+            "parent_chunk_id",
+            "subdivision_index",
+            "subdivision_count",
+            "token_start",
+            "token_end",
+        ):
+            metadata_value = chunk.get(metadata_key)
+            if metadata_value is not None:
+                metadata[metadata_key] = metadata_value
+
         collection.add(
             ids=[chunk["chunk_id"]],
             documents=[chunk["text"]],
-            metadatas=[
-                {
-                    "page": chunk["page"],
-                    "document_id": document_id,
-                }
-            ],
+            metadatas=[metadata],
             embeddings=[
                 get_embedding(chunk["text"])
             ]

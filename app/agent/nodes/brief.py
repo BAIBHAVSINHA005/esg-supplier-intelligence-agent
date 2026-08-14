@@ -1,5 +1,6 @@
 from datetime import datetime
 from app.agent.state import AssessmentState
+from app.agent.evidence import build_evidence_register, format_reference
 
 
 DISCLAIMER = (
@@ -163,6 +164,7 @@ def compile_brief(state: AssessmentState) -> dict:
                 confidence_level, confidence_directive, hitl_flag
         completeness_assessment: completeness_results (from analysis_layer)
         scope3_verdict: (from analysis_layer)
+        evidence_register: traceable extraction evidence and source locations
         gaps: (from analysis_layer)
         recommended_actions: (from analysis_layer)
         followup_questions: (from generate_questions)
@@ -177,6 +179,19 @@ def compile_brief(state: AssessmentState) -> dict:
 
     scope3_narrative = _scope3_assessment_narrative(state.get("scope3_verdict"))
     confidence_explanation = _confidence_explanation(state)
+    evidence_register = build_evidence_register(state)
+    gap_references = {
+        gap.get("gap_id", str(index)): format_reference(
+            gap.get("citation"), gap.get("brsr_reference")
+        )
+        for index, gap in enumerate(state["gaps"], start=1)
+    }
+    question_references = {
+        question.get("gap_id", str(index)): format_reference(
+            question.get("reference") or question.get("citation")
+        )
+        for index, question in enumerate(state["followup_questions"], start=1)
+    }
 
     brief = {
         "executive_summary": _executive_summary(state),
@@ -195,10 +210,13 @@ def compile_brief(state: AssessmentState) -> dict:
         "scope3_assessment_narrative": scope3_narrative,
         "confidence_explanation": confidence_explanation,
         "gaps": state["gaps"],
+        "gap_references": gap_references,
         "recommended_actions": state["recommended_actions"],
         "followup_questions": state["followup_questions"],
+        "question_references": question_references,
         "uncertain_fields": state["uncertain_fields"],
         "extraction_errors": state["extraction_errors"],
+        "evidence_register": evidence_register,
         "status": "brief_generated",
     }
 

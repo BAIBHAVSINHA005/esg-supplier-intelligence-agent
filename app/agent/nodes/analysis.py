@@ -113,6 +113,13 @@ def _classify_scope3(scope3_indicator: dict) -> dict:
             "citation": citation,
         }
 
+    if state == "not_found" and not materiality_claim:
+        return {
+            **_SCOPE3_LEVELS["not_found"],
+            "evidence": evidence or "No Scope 3 content located in the uploaded filing.",
+            "citation": f"Not found in uploaded BRSR filing — {citation} checked",
+        }
+
     # Fallback: if the extractor did not set scope3_mentioned (e.g. stub extractor),
     # infer from the extraction state so the decision tree still runs correctly.
     if not mentioned and not materiality_claim:

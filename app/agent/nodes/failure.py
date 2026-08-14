@@ -64,9 +64,12 @@ def handle_failure(state: AssessmentState) -> dict:
             "not be completed."
         ),
         "gaps": [],
+        "gap_references": {},
         "recommended_actions": [],
         "followup_questions": [],
+        "question_references": {},
         "extraction_errors": [],
+        "evidence_register": [],
     }
 
     return {
