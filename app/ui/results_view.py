@@ -5,6 +5,22 @@ import streamlit as st
 from app.agent.evidence import format_reference
 
 
+def _source_locations_text(entry: dict) -> str:
+    return "; ".join(
+        (
+            f"page {location.get('page')}"
+            if location.get("page") is not None
+            else "page unavailable"
+        )
+        + (
+            f" / chunk {location.get('chunk_id')}"
+            if location.get("chunk_id")
+            else ""
+        )
+        for location in entry.get("source_locations", [])
+    ) or "—"
+
+
 def render_results_view() -> None:
     """Render the completed ESG Intelligence Brief."""
     analysis_result = st.session_state.analysis_result or {}
@@ -34,7 +50,7 @@ def render_results_view() -> None:
     )
 
     supplier_column, confidence_column, hitl_column = st.columns(3)
-    supplier_column.metric("Supplier Name", header.get("supplier_name", "Unknown"))
+    supplier_column.metric("Supplier Name", header.get("supplier_name") or "Unknown")
     confidence_column.metric(
         "Confidence Level",
         header.get("confidence_level", "unknown").upper(),
@@ -70,10 +86,8 @@ def render_results_view() -> None:
             ]
         )
 
-    st.subheader("Scope 3 Verdict")
+    st.subheader("Scope 3 Assessment")
     st.info(scope3_verdict.get("label", "No Scope 3 assessment available."))
-
-    st.subheader("Scope 3 Assessment Narrative")
     st.write(
         brief.get(
             "scope3_assessment_narrative",
@@ -81,75 +95,23 @@ def render_results_view() -> None:
         )
     )
 
-    st.subheader("Scope 3 Evidence")
-    scope3_status = scope3_evidence.get("evidence_status")
-    if scope3_status == "not_found":
-        st.info("No supporting evidence excerpt is available because Scope 3 was not found.")
-    elif scope3_status == "extraction_error":
-        st.warning("No supporting evidence excerpt is available because extraction failed.")
-    else:
-        st.info(
-            scope3_evidence.get("evidence_excerpt")
-            or scope3_verdict.get("evidence")
-            or "No Scope 3 evidence excerpt is available."
-        )
-
-    scope3_reference = format_reference(
-        scope3_evidence.get("citation") or scope3_verdict.get("citation"),
-        scope3_evidence.get("assessment_reference"),
-    )
-    st.caption(f"Reference: {scope3_reference}")
-
-    if scope3_evidence.get("source_locations"):
-        st.caption(
-            "Matched source: "
-            + ", ".join(
-                (
-                    f"page {location.get('page')}"
-                    if location.get("page") is not None
-                    else "page unavailable"
-                )
-                + (
-                    f", chunk {location.get('chunk_id')}"
-                    if location.get("chunk_id")
-                    else ""
-                )
-                for location in scope3_evidence["source_locations"]
-            )
-        )
-
-    st.subheader("Evidence Register")
-    if evidence_register:
+    st.subheader("Procurement Recommendations")
+    recommendations = brief.get("procurement_recommendations", [])
+    if recommendations:
         st.table(
             [
                 {
-                    "Indicator": entry.get("indicator_name", entry.get("indicator_id", "")),
-                    "State": entry.get("state", "unknown"),
-                    "Evidence status": entry.get("evidence_status", "unknown"),
-                    "Evidence excerpt": entry.get("evidence_excerpt") or "—",
-                    "Reference": format_reference(
-                        entry.get("citation"), entry.get("assessment_reference")
-                    ),
-                    "Matched sources": "; ".join(
-                        (
-                            f"page {location.get('page')}"
-                            if location.get("page") is not None
-                            else "page unavailable"
-                        )
-                        + (
-                            f" / chunk {location.get('chunk_id')}"
-                            if location.get("chunk_id")
-                            else ""
-                        )
-                        for location in entry.get("source_locations", [])
-                    )
-                    or "—",
+                    "Rank": item.get("rank", ""),
+                    "Gap": item.get("gap_name", item.get("gap_id", "")),
+                    "Severity": item.get("severity", ""),
+                    "Recommendation": item.get("recommendation", ""),
+                    "Finding basis": item.get("basis", ""),
                 }
-                for entry in evidence_register
+                for item in recommendations
             ]
         )
     else:
-        st.info("No indicator-level evidence metadata is available.")
+        st.info("No procurement recommendations are required from the identified gaps.")
 
     st.subheader("Completeness Assessment")
     completeness = brief.get("completeness_assessment", [])
@@ -182,9 +144,6 @@ def render_results_view() -> None:
                     "Gap": gap.get("gap_name", ""),
                     "Severity": gap.get("severity", ""),
                     "Why it matters": gap.get("description", ""),
-                    "Reference": format_reference(
-                        gap.get("citation"), gap.get("brsr_reference")
-                    ),
                 }
                 for gap in gaps
             ]
@@ -201,12 +160,82 @@ def render_results_view() -> None:
                     "Rank": question.get("rank", ""),
                     "Gap": question.get("linked_gap_id", question.get("gap_id", "")),
                     "Question": question.get("question", ""),
-                    "Reference": format_reference(
-                        question.get("reference") or question.get("citation")
-                    ),
                 }
                 for question in questions
             ]
         )
     else:
         st.info("No follow-up questions are available.")
+
+    with st.expander("Evidence Details"):
+        st.markdown("#### Scope 3 Evidence")
+        scope3_status = scope3_evidence.get("evidence_status")
+        if scope3_status == "not_found":
+            st.info(
+                "No supporting evidence excerpt is available because Scope 3 was not found."
+            )
+        elif scope3_status == "extraction_error":
+            st.warning(
+                "No supporting evidence excerpt is available because extraction failed."
+            )
+        else:
+            st.info(
+                scope3_evidence.get("evidence_excerpt")
+                or scope3_verdict.get("evidence")
+                or "No Scope 3 evidence excerpt is available."
+            )
+
+        scope3_reference = format_reference(
+            scope3_evidence.get("citation") or scope3_verdict.get("citation"),
+            scope3_evidence.get("assessment_reference"),
+        )
+        st.caption(f"Reference: {scope3_reference}")
+        if scope3_evidence.get("source_locations"):
+            st.caption(f"Matched source: {_source_locations_text(scope3_evidence)}")
+
+        st.markdown("#### Indicator Evidence Register")
+        if evidence_register:
+            st.table(
+                [
+                    {
+                        "Indicator": entry.get(
+                            "indicator_name", entry.get("indicator_id", "")
+                        ),
+                        "State": entry.get("state", "unknown"),
+                        "Evidence status": entry.get("evidence_status", "unknown"),
+                        "Evidence excerpt": entry.get("evidence_excerpt") or "—",
+                        "Reference": format_reference(
+                            entry.get("citation"), entry.get("assessment_reference")
+                        ),
+                        "Matched sources": _source_locations_text(entry),
+                    }
+                    for entry in evidence_register
+                ]
+            )
+        else:
+            st.info("No indicator-level evidence metadata is available.")
+
+        st.markdown("#### Finding and Question References")
+        reference_rows = [
+            {
+                "Item": item.get("gap_id", ""),
+                "Type": "Gap",
+                "Reference": format_reference(
+                    item.get("citation"), item.get("brsr_reference")
+                ),
+            }
+            for item in gaps
+        ] + [
+            {
+                "Item": item.get("linked_gap_id", item.get("gap_id", "")),
+                "Type": "Follow-up question",
+                "Reference": format_reference(
+                    item.get("reference") or item.get("citation")
+                ),
+            }
+            for item in questions
+        ]
+        if reference_rows:
+            st.table(reference_rows)
+        else:
+            st.info("No finding or question references are available.")

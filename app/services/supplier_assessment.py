@@ -14,7 +14,7 @@ def run_supplier_assessment(
 ) -> dict[str, Any]:
     """Run the ESG assessment workflow and return its structured result."""
     state = make_initial_state(
-        supplier_name=supplier_name,
+        supplier_name=(supplier_name or "").strip(),
         source_filename=source_filename,
         document_bytes=pdf_bytes,
     )

@@ -6,249 +6,384 @@
 
 ## Project Summary
 
-The Supplier ESG Intelligence Agent is an AI-powered document intelligence system that transforms a supplier's Business Responsibility and Sustainability Report (BRSR) into a structured ESG Intelligence Brief within 90 seconds.
+The Supplier ESG Intelligence Agent is an evidence-grounded AI document intelligence system that converts an Indian supplier's Business Responsibility and Sustainability Report (BRSR) into a procurement-ready ESG Intelligence Brief.
 
-The system is designed to help ESG analysts and procurement teams rapidly assess supplier ESG disclosures, identify material gaps, evaluate Scope 3 readiness, and generate supplier follow-up questions without manually reviewing hundreds of pages of annual reports.
+The current V1 focuses on **BRSR Principle 6: Environment** and helps sustainability and procurement teams determine whether a supplier's disclosed ESG information is sufficiently complete, traceable, and usable for:
 
-This project is being developed as a portfolio-grade AI application demonstrating document intelligence, Retrieval-Augmented Generation (RAG), agent orchestration, and ESG domain expertise.
+- Scope 3 data collection
+- supplier due diligence
+- procurement follow-up
+- disclosure-gap identification
+- evidence-backed ESG review
+
+The system is designed to accelerate the initial analyst review while keeping source evidence, confidence, and human review requirements visible.
 
 ---
 
 ## Business Problem
 
-Large organizations increasingly require ESG assessments of suppliers to support:
+Supplier sustainability filings contain important procurement and climate data, but that information is often:
 
-- BRSR value-chain disclosures
-- Scope 3 emissions reporting
-- Supplier onboarding
-- Procurement risk assessment
-- Sustainability compliance requirements
+- buried in long PDF reports
+- split across tables and narrative sections
+- reported inconsistently between companies
+- difficult to compare manually
+- incomplete for Scope 3 decision use
 
-Currently, ESG analysts spend 45–90 minutes reviewing a single supplier filing.
+A procurement or ESG analyst therefore needs more than a summary.
 
-The process typically involves:
+The practical questions are:
 
-1. Locating the supplier annual report
-2. Finding the BRSR section
-3. Extracting ESG indicators
-4. Assessing disclosure quality
-5. Identifying missing information
-6. Drafting follow-up questions
-7. Creating an internal assessment report
+- Is the disclosure actually present?
+- Is the extracted value traceable to the source?
+- Is Scope 3 information usable or only partially disclosed?
+- Which data gaps matter to the buyer?
+- What should the supplier be asked next?
 
-This process is slow, inconsistent, and difficult to scale.
+Manual review is difficult to scale across a large supplier base.
 
 ---
 
 ## Proposed Solution
 
-The Supplier ESG Intelligence Agent automates the initial assessment process.
+A user uploads a machine-readable supplier BRSR PDF.
 
-A user uploads a supplier BRSR PDF, and the system:
+The system then:
 
-1. Extracts and validates document content
-2. Locates the BRSR section
-3. Extracts ESG indicators
-4. Assesses disclosure completeness
-5. Classifies Scope 3 readiness
-6. Identifies disclosure gaps
-7. Generates supplier follow-up questions
-8. Produces a structured ESG Intelligence Brief
+1. extracts and validates the document
+2. identifies relevant BRSR content
+3. indexes document chunks for retrieval
+4. retrieves evidence separately for each target ESG indicator
+5. performs structured LLM extraction
+6. applies deterministic ESG and Scope 3 rules
+7. assesses confidence and HITL requirements
+8. creates an evidence register
+9. identifies procurement-relevant disclosure gaps
+10. generates supplier-specific follow-up questions
+11. produces deterministic procurement recommendations
+12. compiles the final ESG Intelligence Brief
 
-All findings are supported by document citations to improve transparency and auditability.
+The system is designed to distinguish a **missing disclosure** from a **failed extraction**, reducing the risk of creating false ESG gaps from technical failures.
 
 ---
 
 ## Primary Users
 
-### ESG Analyst
-
-**Needs:**
-
-- Faster supplier assessments
-- Consistent evaluation methodology
-- Source-backed findings
-- Ready-to-use supplier questions
-
 ### Procurement Manager
 
-**Needs:**
+Needs:
+- clear supplier ESG conclusions
+- Scope 3 usability assessment
+- critical disclosure gaps
+- recommended procurement action
+- supplier-ready follow-up questions
+- evidence that can be reviewed when required
 
-- Simple supplier ESG summaries
-- Key disclosure gaps
-- Actionable recommendations
+### ESG / Sustainability Analyst
 
----
+Needs:
+- faster first-pass supplier assessment
+- structured Principle 6 extraction
+- traceable evidence
+- consistent Scope 3 classification
+- confidence and review flags
+- less time spent locating disclosure details manually
 
-## Core Features (MVP)
+### Potential Consulting / Client Use
 
-### Document Ingestion
+The V1 can also serve as the foundation for a client-specific supplier ESG assessment workflow where a buyer repeatedly receives sustainability disclosures from vendors and needs a consistent evidence-grounded screening process.
 
-- Upload BRSR PDF
-- Extract machine-readable text
-- Detect document quality issues
-
-### ESG Extraction
-
-- Extract BRSR indicators
-- Capture evidence and citations
-
-### Scope 3 Readiness Assessment
-
-Classification levels:
-
-- Not Found
-- Materiality Claim
-- Claim Only
-- Partial
-- Scope 3 Ready
-
-### Disclosure Completeness Assessment
-
-- Assess disclosures across all 9 BRSR Principles
-- Highlight missing or incomplete indicators
-
-### Gap Detection
-
-- Identify the most material disclosure gaps
-- Prioritize findings for supplier engagement
-
-### Follow-Up Question Generation
-
-- Generate supplier-facing questions
-- Support ESG analyst workflows
-
-### ESG Intelligence Brief
-
-- Compile all findings into a structured report
-- Present evidence, gaps, and recommendations
+A production deployment would require additional controls such as persistence,
+authentication, data governance, and operational monitoring.
 
 ---
 
-## Technology Stack
+## Current V1 Assessment Scope
 
-### AI & Agent Framework
+V1 assesses **nine Principle 6 indicators**.
 
+### Energy and emissions
+- Total energy consumption
+- Scope 1 GHG emissions
+- Scope 2 GHG emissions
+- GHG accounting methodology
+- GHG emissions intensity
+
+### Value-chain climate data
+- Scope 3 GHG emissions
+- climate or emissions-reduction target
+
+### Resources and waste
+- Water consumption
+- Total waste generated
+
+V1 deliberately prioritizes depth and reliability in this scope rather than broad but shallow coverage of every ESG framework.
+
+---
+
+## Scope 3 Readiness
+
+The system does not reduce Scope 3 to a yes/no disclosure flag.
+
+Representative classifications include:
+
+- **Not Found**
+- **Claim Only**
+- **Materiality Claim**
+- **Partial**
+- **Ready / sufficiently disclosed**
+
+The distinction matters because a supplier may disclose an absolute Scope 3 number but still lack the methodology or supporting context a buyer needs to use that information confidently.
+
+The business question is:
+
+> **Can the buyer actually use this supplier's disclosed Scope 3 information?**
+
+---
+
+## ESG Intelligence Brief
+
+The final output is structured around procurement decision use.
+
+### Executive Summary
+A concise supplier-level conclusion.
+
+### Scope 3 Assessment
+A graded readiness verdict with an explanation of why the disclosure is or is not usable.
+
+### Principle 6 Completeness
+A structured view of assessed environmental disclosures.
+
+### Critical Gaps
+Deterministically identified missing or insufficient disclosures.
+
+### Supplier Follow-Up Questions
+Questions linked to the specific gaps found in the supplier's filing.
+
+### Procurement Recommendations
+Recommended actions derived from existing gaps and findings rather than newly invented model claims.
+
+### Confidence / HITL
+A reliability signal showing whether analyst review is recommended.
+
+### Evidence Details
+Expandable provenance showing the source support available for extracted findings.
+
+---
+
+## Reliability Controls
+
+### Document Isolation
+
+Each assessment uses a unique `document_id` and retrieval is filtered to the active supplier document.
+
+This prevents evidence from one filing from being retrieved during another supplier assessment.
+
+### Missing vs Failed Extraction
+
+The system preserves two different states:
+
+- `not_found` — no qualifying disclosure identified
+- `extraction_error` — the indicator could not be assessed reliably because of a technical or validation failure
+
+An extraction failure does not automatically create an ESG gap.
+
+### Evidence Grounding
+
+Evidence is matched back to retrieved document chunks using strict normalized matching.
+
+The system prefers incomplete provenance over invented provenance.
+
+### Rate-Limit Handling
+
+OpenAI rate-limit failures use bounded retry behavior and become `extraction_error` after the final failed attempt.
+
+---
+
+## Real-Document Validation
+
+### Reliance Industries
+
+The workflow was validated against a real Reliance BRSR.
+
+Important outcomes included:
+- correct recovery of Total Waste Generated after retrieval hardening
+- Scope 3 correctly retained as `not_found`
+- HIGH confidence
+- grounded procurement output
+
+### Birla Corporation Limited
+
+A second-company validation tested generalization.
+
+Validated outcomes included:
+- supplier legal name resolved from the filing
+- Scope 3 emissions retrieved as `18,09,403.78 tCO2e`
+- Scope 3 classified as Partial
+- Total Waste Generated retrieved as `31,223.96 MT`
+- supplier questions and recommendations grounded in current findings
+
+These two filings exposed different retrieval and disclosure patterns and were used to strengthen the pipeline.
+
+---
+
+## Current Technology
+
+### Workflow
 - LangGraph
-- LangChain
 
-### LLM
+### LLM / Structured Extraction
+- OpenAI Responses API
+- Pydantic validation
 
-- OpenAI GPT Models
-- Claude (future option)
+### Retrieval
+- ChromaDB
+- `all-MiniLM-L6-v2` sentence-transformer embeddings
 
 ### Document Processing
-
 - PyMuPDF
 
-### Vector Database
+### Application Layer
+- Python supplier-assessment service
 
-- ChromaDB
-
-### Frontend
-
+### User Interfaces
 - Streamlit
+- Gradio
 
-### Programming Language
+### Testing
+- Python `unittest`
 
-- Python
+### Remaining V1 Delivery Layer
+- FastAPI
+- OpenAPI / Swagger
+- Docker
 
 ---
 
-## MVP Workflow
+## Current Validation Baseline
+
+**47 automated tests passing**
+
+Coverage includes:
+- retrieval regressions
+- document isolation
+- chunk subdivision
+- extraction failure handling
+- Scope 3 state consistency
+- confidence / HITL
+- evidence grounding
+- procurement recommendations
+- supplier-name handling
+
+---
+
+## What V1 Does Not Yet Include
+
+The following are intentionally outside the current V1:
+
+- persistence and assessment history
+- authentication
+- multi-user access
+- Supabase / PostgreSQL
+- pgvector
+- multi-supplier comparison
+- supplier email automation
+- procurement-system integrations
+- MCP
+- autonomous multi-agent workflows
+- GRI / CSRD / ISSB / CDP support
+
+These are possible later product capabilities rather than hidden dependencies of the current workflow.
+
+---
+
+## Business Value
+
+The V1 demonstrates how an AI-assisted supplier ESG review can move from:
 
 ```text
-Upload PDF
-      ↓
-Document Ingestion
-      ↓
-Quality Check
-      ↓
-Indicator Extraction
-      ↓
-Analysis Layer
-      ↓
-Confidence Assessment
-      ↓
-Question Generation
-      ↓
-Brief Compilation
-      ↓
-Final ESG Intelligence Brief
+long sustainability filing
+    ->
+structured evidence
+    ->
+Scope 3 usability assessment
+    ->
+identified information gaps
+    ->
+supplier questions
+    ->
+procurement action
 ```
 
----
+The value is not simply document summarization.
 
-## Portfolio Learning Objectives
-
-This project demonstrates practical experience in:
-
-### Agent Engineering
-
-- LangGraph state management
-- Conditional routing
-- Multi-step workflows
-
-### Retrieval-Augmented Generation (RAG)
-
-- ChromaDB integration
-- Knowledge-grounded extraction
-
-### Document AI
-
-- PDF ingestion
-- Chunking strategies
-- Metadata extraction
-
-### Product Thinking
-
-- PRD-driven development
-- Architecture-first design
-- Enterprise workflow modeling
-
----
-
-## Success Criteria
-
-The MVP will be considered successful when:
-
-- A BRSR PDF can be processed end-to-end
-- A structured ESG Intelligence Brief is generated
-- Findings contain source citations
-- Scope 3 classification follows defined rules
-- Processing completes within approximately 90 seconds
-- The application can be demonstrated locally through Streamlit
+The product is intended to turn supplier sustainability disclosures into **traceable, procurement-ready Scope 3 intelligence**.
 
 ---
 
 ## Current Development Status
 
 ### Completed
+- core LangGraph workflow
+- BRSR ingestion
+- document-scoped RAG
+- indicator-specific retrieval
+- structured extraction
+- deterministic ESG analysis
+- Scope 3 readiness classification
+- confidence / HITL
+- evidence grounding
+- procurement recommendations
+- supplier-specific questions
+- Streamlit / Gradio presentation
+- Reliance and Birla validation
 
-- Project Charter
-- Product Requirements Document (PRD)
-- Solution Architecture
-- Implementation Roadmap
-- LangGraph Foundation Learning
+### Remaining Before V1 Release
+- FastAPI
+- explicit API response contracts
+- OpenAPI / Swagger validation
+- Docker
+- third-company validation
+- final demo / screenshots
+- V1 release/tag
 
-### Current Focus
+---
 
-- LangGraph state design
-- AssessmentState implementation
-- Transition from learning workflows to production architecture
+## Product Direction
+
+### V2
+Persistent multi-supplier assessment and supplier-response workflows.
+
+Potential capabilities:
+- PostgreSQL / Supabase
+- assessment history
+- evaluation / observability
+- MCP
+- authentication where justified
+
+### V3
+Controlled specialist-agent workflows for:
+- disclosure discovery
+- evidence verification
+- supplier engagement
+- procurement support
+
+### V4
+Enterprise supplier portfolio intelligence:
+- multi-year supplier history
+- benchmarking
+- cross-framework mappings
+- broader supplier data relationships
 
 ---
 
-## Project Goal
+## Project Positioning
 
-Build a portfolio-quality AI application that demonstrates:
+This project is suitable as:
 
-- Agent-based workflow orchestration
-- ESG document intelligence
-- Retrieval-Augmented Generation (RAG)
-- Enterprise product design
-- Applied Generative AI engineering
+- an applied AI / GenAI engineering portfolio project
+- a technical case study for AI Solutions or Agentic AI roles
+- a prototype for supplier ESG / Scope 3 consulting
+- a foundation for a client-specific procurement intelligence workflow
 
-while solving a realistic sustainability and procurement use case.
-
----
+It demonstrates that the AI layer, the ESG rules, the evidence model, and the procurement workflow can be designed together rather than as separate demo components.

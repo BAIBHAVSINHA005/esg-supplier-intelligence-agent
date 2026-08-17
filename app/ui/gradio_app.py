@@ -16,15 +16,9 @@ def assess_supplier(pdf_file):
 
     pdf_bytes = pdf_path.read_bytes()
 
-    supplier_name = (
-        pdf_path.stem
-        .replace("_", " ")
-        .title()
-    )
-
     result = run_supplier_assessment(
         pdf_bytes=pdf_bytes,
-        supplier_name=supplier_name,
+        supplier_name="",
         source_filename=pdf_path.name,
     )
 
@@ -40,6 +34,8 @@ def assess_supplier(pdf_file):
     )
 
     gaps = brief.get("gaps", [])
+
+    recommendations = brief.get("procurement_recommendations", [])
 
     questions = brief.get(
         "followup_questions",
@@ -97,7 +93,7 @@ def assess_supplier(pdf_file):
 
     # Scope 3
 
-    report.append("\n## Scope 3 Verdict")
+    report.append("\n## Scope 3 Assessment")
 
     report.append(
         scope3.get(
@@ -106,14 +102,29 @@ def assess_supplier(pdf_file):
         )
     )
 
-    report.append("\n### Scope 3 Assessment Narrative")
-
     report.append(
         brief.get(
             "scope3_assessment_narrative",
             "No Scope 3 assessment narrative is available.",
         )
     )
+
+    report.append("\n## Procurement Recommendations")
+    if recommendations:
+        for item in recommendations:
+            report.append(
+                f"\n{item.get('rank', '')}. **{item.get('gap_name', item.get('gap_id', ''))}** "
+                f"({item.get('severity', 'unspecified')}) — "
+                f"{item.get('recommendation', '')}\n\n"
+                f"   Finding basis: {item.get('basis', '')}"
+            )
+    else:
+        report.append(
+            "No procurement recommendations are required from the identified gaps."
+        )
+
+    report.append("\n<details><summary><strong>Evidence Details</strong></summary>\n")
+    report.append("\n### Scope 3 Evidence")
 
     evidence_status = scope3_evidence.get("evidence_status")
     if evidence_status == "not_found":
@@ -164,6 +175,19 @@ def assess_supplier(pdf_file):
             f"matched sources: {sources}"
         )
 
+    report.append("\n### Finding and Question References")
+    for gap in gaps:
+        report.append(
+            f"\n- Gap {gap.get('gap_id', '')}: "
+            f"{format_reference(gap.get('citation'), gap.get('brsr_reference'))}"
+        )
+    for question in questions:
+        report.append(
+            f"\n- Question {question.get('linked_gap_id', question.get('gap_id', ''))}: "
+            f"{format_reference(question.get('reference') or question.get('citation'))}"
+        )
+    report.append("\n</details>")
+
     # Completeness
 
     report.append("\n---")
@@ -196,8 +220,8 @@ def assess_supplier(pdf_file):
     for gap in gaps:
 
         report.append(
-            f"\n• {gap['gap_name']} — "
-            f"{format_reference(gap.get('citation'), gap.get('brsr_reference'))}"
+            f"\n- **{gap['gap_name']}** ({gap.get('severity', 'unspecified')}): "
+            f"{gap.get('description', '')}"
         )
 
     # Questions
@@ -208,12 +232,9 @@ def assess_supplier(pdf_file):
 
     for i, q in enumerate(questions, start=1):
 
-        question_reference = format_reference(
-            q.get("reference") or q.get("citation")
-        )
         report.append(
             f"\n{i}. [{q.get('linked_gap_id', q.get('gap_id', ''))}] "
-            f"{q['question']}\n   Reference: {question_reference}"
+            f"{q['question']}"
         )
 
     return "\n".join(report)
@@ -224,8 +245,7 @@ demo = gr.Interface(
     inputs=gr.File(
         label="Upload BRSR PDF"
     ),
-    outputs=gr.Textbox(
-        lines=30,
+    outputs=gr.Markdown(
         label="ESG Assessment"
     ),
     title="ESG Supplier Intelligence Agent",

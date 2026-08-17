@@ -143,6 +143,51 @@ def _confidence_explanation(state: AssessmentState) -> str:
     return f"Overall confidence is {level}; no further rationale is available."
 
 
+def _procurement_recommendations(state: AssessmentState) -> list[dict]:
+    """Link existing actions to their gap, finding basis, and source reference."""
+    actions_by_gap = {
+        action.get("gap_id"): action
+        for action in state.get("recommended_actions", [])
+        if action.get("gap_id")
+    }
+    questions_by_gap = {
+        question.get("linked_gap_id") or question.get("gap_id"): question
+        for question in state.get("followup_questions", [])
+        if question.get("linked_gap_id") or question.get("gap_id")
+    }
+    recommendations = []
+
+    for gap in state.get("gaps", []):
+        gap_id = gap.get("gap_id")
+        action = actions_by_gap.get(gap_id, {})
+        recommendation = (action.get("action") or "").strip()
+        if not recommendation:
+            continue
+
+        question = questions_by_gap.get(gap_id, {})
+        basis = (
+            question.get("basis")
+            or gap.get("description")
+            or gap.get("gap_name")
+            or ""
+        )
+        recommendations.append(
+            {
+                "rank": gap.get("rank", action.get("rank", len(recommendations) + 1)),
+                "gap_id": gap_id,
+                "gap_name": gap.get("gap_name") or action.get("gap_name"),
+                "severity": gap.get("severity"),
+                "recommendation": recommendation,
+                "basis": basis,
+                "reference": format_reference(
+                    gap.get("citation"), gap.get("brsr_reference")
+                ),
+            }
+        )
+
+    return recommendations
+
+
 def compile_brief(state: AssessmentState) -> dict:
     """
     Generate final ESG Intelligence Brief.
@@ -167,6 +212,7 @@ def compile_brief(state: AssessmentState) -> dict:
         evidence_register: traceable extraction evidence and source locations
         gaps: (from analysis_layer)
         recommended_actions: (from analysis_layer)
+        procurement_recommendations: actions linked to existing findings and references
         followup_questions: (from generate_questions)
         uncertain_fields: (from assess_confidence — used to render [⚠] markers)
 
@@ -179,6 +225,7 @@ def compile_brief(state: AssessmentState) -> dict:
 
     scope3_narrative = _scope3_assessment_narrative(state.get("scope3_verdict"))
     confidence_explanation = _confidence_explanation(state)
+    procurement_recommendations = _procurement_recommendations(state)
     evidence_register = build_evidence_register(state)
     gap_references = {
         gap.get("gap_id", str(index)): format_reference(
@@ -212,6 +259,7 @@ def compile_brief(state: AssessmentState) -> dict:
         "gaps": state["gaps"],
         "gap_references": gap_references,
         "recommended_actions": state["recommended_actions"],
+        "procurement_recommendations": procurement_recommendations,
         "followup_questions": state["followup_questions"],
         "question_references": question_references,
         "uncertain_fields": state["uncertain_fields"],

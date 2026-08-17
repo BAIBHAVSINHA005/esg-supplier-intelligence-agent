@@ -35,14 +35,8 @@ INDICATOR_QUERIES = {
     """,
 
     "e6_scope3_emissions": """
-        Scope 3 emissions
-        upstream emissions
-        downstream emissions
-        value chain emissions
-        purchased goods
-        business travel
-        employee commuting
-        tCO2e
+        Total Scope 3 Emissions
+        metric tonnes of CO2 equivalent
     """,
 
     "e6_ghg_methodology": """
@@ -80,11 +74,11 @@ INDICATOR_QUERIES = {
     """,
 
     "e6_waste_generated": """
-        waste generated
-        hazardous waste
-        non-hazardous waste
-        waste management
-        waste disposed
+        Total Waste Generated
+        A+B+C+D+E+F+G+H
+        Other Hazardous waste
+        Other Non-hazardous waste
+        metric tonnes
     """,
 }
 
