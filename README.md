@@ -33,13 +33,12 @@ Current V1 work includes:
 - FastAPI `GET /health` and multipart `POST /v1/assessments` endpoints
 - explicit nested Pydantic response models exposed through OpenAPI/Swagger
 - a Python 3.12 Docker image with CPU-only PyTorch and Uvicorn
-- a verified real-BRSR assessment through the complete Dockerized API path
+- verified real-BRSR assessments through the complete Dockerized API path
 - regression tests for retrieval, state consistency, grounding, and failure paths
 
 The remaining V1 work is release-focused: **maintained regression validation,
-final documentation and release hardening, an optional third weaker-BRSR
-validation, cloud deployment, and the `v1.0.0` release/tag**. Cloud deployment
-and the final release/tag are not yet complete.
+final documentation and release hardening, cloud deployment, and the `v1.0.0`
+release/tag**. Cloud deployment and the final release/tag are not yet complete.
 
 ## Why it matters
 
@@ -245,12 +244,22 @@ Validation confirmed:
 - procurement recommendations and follow-up questions grounded in the detected
   disclosure gaps
 
-These two filings provide contrasting Scope 3 cases and are used as practical
-regression examples.
+### Sundram Fasteners Limited (SFL)
+
+Validation confirmed:
+
+- a third real-company BRSR completed through the Dockerized API path
+- the numbered inline Section A format
+  `2. Name of the Listed Entity: Sundram Fasteners Limited (SFL)` is handled
+  deterministically instead of falling back to the filename
+- the metadata regression exposed by this filing is covered by an automated test
+
+These three filings provide contrasting disclosure and document-format cases
+and are used as practical regression examples.
 
 ## Automated validation
 
-The maintained test suite currently has **57 passing tests and 11 passing
+The maintained test suite currently has **58 passing tests and 11 passing
 subtests** covering areas
 including:
 
@@ -281,6 +290,28 @@ including:
 | User interfaces | Streamlit and Gradio |
 | Packaging/runtime | Docker on Python 3.12; Uvicorn; CPU-only PyTorch |
 | Tests | `pytest` over the maintained regression suite |
+
+## API and Docker quick start
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /health` | Returns API process health. |
+| `POST /v1/assessments` | Accepts multipart `file` (PDF) and optional `supplier_name`; returns the assessment envelope. |
+
+The public response is an explicit nested Pydantic `AssessmentEnvelope` with an
+optional typed `brief` and controlled `error`, and is published through
+OpenAPI/Swagger at `/docs`.
+
+Build and run the verified Python 3.12 image:
+
+```bash
+docker build -t esg-supplier-intelligence-api:v1 .
+docker run --rm -p 8000:8000 -e OPENAI_API_KEY=your-key-here esg-supplier-intelligence-api:v1
+```
+
+Then open `http://localhost:8000/docs` or check
+`http://localhost:8000/health`. The image installs CPU-only PyTorch and runs
+FastAPI with Uvicorn on port 8000. Cloud deployment is not yet complete.
 
 ## Repository layout
 
@@ -326,19 +357,18 @@ route through FastAPI or duplicate domain logic.
 7. evidence grounding and provenance
 8. procurement recommendations and supplier-specific questions
 9. Streamlit / Gradio presentation
-10. multi-company real-BRSR validation
+10. three-company real-BRSR validation: Reliance, Birla, and Sundram Fasteners
 11. FastAPI health and multipart assessment endpoints
 12. explicit nested Pydantic API contract and Swagger/OpenAPI validation
 13. Python 3.12 Docker image with CPU-only PyTorch
-14. container startup, health check, and real Birla BRSR end-to-end validation
+14. container startup, health check, and real-company end-to-end validation
 
 ### Remaining before V1 release
 
 1. maintained regression validation
 2. final documentation, demo assets, and release hardening
-3. one additional weaker/disclosure-poor BRSR validation, if retained
-4. cloud deployment
-5. `v1.0.0` release/tag
+3. cloud deployment
+4. `v1.0.0` release/tag
 
 ## Beyond V1
 

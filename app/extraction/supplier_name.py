@@ -10,7 +10,7 @@ _SECTION_A_PATTERN = re.compile(
 )
 _SECTION_B_PATTERN = re.compile(r"section\s+b\s*:", re.IGNORECASE)
 _LISTED_ENTITY_PATTERN = re.compile(
-    r"^(?:\d+\s+)?name\s+of\s+(?:the\s+)?listed\s+entity\s*(?::|-)?\s*(.*)$",
+    r"^(?:\d+(?:\s*[.)-]\s*|\s+))?name\s+of\s+(?:the\s+)?listed\s+entity\s*(?::|-)?\s*(.*)$",
     re.IGNORECASE,
 )
 

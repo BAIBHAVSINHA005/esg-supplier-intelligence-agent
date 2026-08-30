@@ -117,6 +117,24 @@ class SupplierNamePropagationTests(unittest.TestCase):
 
         self.assertEqual(result["supplier_name"], "Birla Corporation Limited")
 
+    def test_numbered_inline_sfl_name_is_extracted_from_section_a(self) -> None:
+        result = self._ingest(
+            "",
+            """
+            SECTION A: GENERAL DISCLOSURES
+            I. DETAILS OF THE LISTED ENTITY
+            2. Name of the Listed Entity: Sundram Fasteners Limited (SFL)
+            3. Year of incorporation: 1962
+            SECTION B: MANAGEMENT AND PROCESS DISCLOSURES
+            """,
+            "SFLBRSRReport2023.pdf",
+        )
+
+        self.assertEqual(
+            result["supplier_name"],
+            "Sundram Fasteners Limited (SFL)",
+        )
+
     def test_filename_is_used_when_section_a_name_is_unavailable(self) -> None:
         result = self._ingest("", "No Section A metadata.", "acme_components.pdf")
 
