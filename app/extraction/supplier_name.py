@@ -21,30 +21,31 @@ def _filename_name(source_filename: str) -> str:
 
 
 def _section_a_listed_entity(document_text: str) -> str:
-    section_match = _SECTION_A_PATTERN.search(document_text or "")
-    if not section_match:
-        return ""
+    text = document_text or ""
+    for section_match in _SECTION_A_PATTERN.finditer(text):
+        section_text = text[section_match.end():]
+        next_section = _SECTION_B_PATTERN.search(section_text)
+        if next_section:
+            section_text = section_text[:next_section.start()]
 
-    section_text = document_text[section_match.end():]
-    next_section = _SECTION_B_PATTERN.search(section_text)
-    if next_section:
-        section_text = section_text[:next_section.start()]
+        lines = [
+            re.sub(r"\s+", " ", line).strip()
+            for line in section_text.splitlines()
+        ]
+        for index, line in enumerate(lines):
+            label_match = _LISTED_ENTITY_PATTERN.match(line)
+            if not label_match:
+                continue
 
-    lines = [re.sub(r"\s+", " ", line).strip() for line in section_text.splitlines()]
-    for index, line in enumerate(lines):
-        label_match = _LISTED_ENTITY_PATTERN.match(line)
-        if not label_match:
-            continue
+            inline_value = label_match.group(1).strip(" :-")
+            if inline_value:
+                return inline_value
 
-        inline_value = label_match.group(1).strip(" :-")
-        if inline_value:
-            return inline_value
-
-        for candidate in lines[index + 1:index + 4]:
-            candidate = candidate.strip(" :-")
-            if candidate and not candidate.isdigit():
-                return candidate
-        return ""
+            for candidate in lines[index + 1:index + 4]:
+                candidate = candidate.strip(" :-")
+                if candidate and not candidate.isdigit():
+                    return candidate
+            break
 
     return ""
 

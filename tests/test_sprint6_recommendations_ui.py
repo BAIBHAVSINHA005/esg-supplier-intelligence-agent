@@ -135,6 +135,35 @@ class SupplierNamePropagationTests(unittest.TestCase):
             "Sundram Fasteners Limited (SFL)",
         )
 
+    def test_reliance_name_skips_section_a_table_of_contents_entry(self) -> None:
+        result = self._ingest(
+            "",
+            """
+            Section A:
+            General Disclosures
+            PG 2
+            Section B:
+            Management and Process Disclosures
+            PG 24
+
+            Section A: General Disclosures
+            I. Details of the listed entity
+            1.
+            Corporate Identity Number (CIN) of the Listed Entity
+            L17110MH1973PLC019786
+            2.
+            Name of the Listed Entity
+            Reliance Industries Limited
+            3.
+            Year of incorporation
+            1973
+            Section B: Management and Process Disclosures
+            """,
+            "Reliance Industries Limited_BRSR202526.pdf",
+        )
+
+        self.assertEqual(result["supplier_name"], "Reliance Industries Limited")
+
     def test_filename_is_used_when_section_a_name_is_unavailable(self) -> None:
         result = self._ingest("", "No Section A metadata.", "acme_components.pdf")
 
