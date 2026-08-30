@@ -1,0 +1,65 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Secrets and environment
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+*.egg
+
+# Testing
+tests/
+test_*.py
+*_test.py
+
+# Documentation and examples
+docs/
+notebooks/
+research/
+sandbox/
+README*.md
+CHANGELOG.md
+LICENSE
+
+# Development tools
+.git/
+.gitignore
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Data and logs (keep vector_db for production use, but exclude old backups)
+data/uploads/
+vector_db_old/
+vector_db/*.db-shm
+vector_db/*.db-wal
+*.log
+
+# Build and CI/CD
+Makefile
+.github/
+.gitlab-ci.yml
+.circleci/
+
+# Misc project files
+filelist.txt
+project_tree.txt
+appextraction/

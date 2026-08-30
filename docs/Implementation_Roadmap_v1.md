@@ -4,7 +4,7 @@
 **Audience:** Recruiters, hiring managers, technical reviewers, sustainability/procurement stakeholders, and prospective clients
 
 **Goal:** Ship a portfolio-quality V1 demonstrating evidence-grounded BRSR intelligence, LangGraph orchestration, RAG, deterministic ESG analysis, API delivery, and containerized execution.
-**Status:** Core intelligence complete; delivery layer pending
+**Status:** Core intelligence and local containerized delivery complete; release hardening and cloud deployment remain
 **Updated:** August 2026
 
 ---
@@ -49,9 +49,12 @@ V1 is not intended to be a full ESG platform. It is an end-to-end, auditable por
 | procurement recommendations | Complete |
 | Streamlit UI | Complete |
 | Gradio UI | Complete |
-| FastAPI | Pending |
-| OpenAPI / Swagger | Pending |
-| Docker | Pending |
+| FastAPI health and multipart assessment API | Complete |
+| Explicit nested Pydantic public contract | Complete |
+| OpenAPI / Swagger validation | Complete |
+| Python 3.12 Docker image and CPU-only PyTorch | Complete |
+| Container health and real Birla end-to-end assessment | Complete |
+| Cloud deployment | Pending |
 | final release packaging | Pending |
 
 ### Explicitly deferred beyond V1
@@ -75,7 +78,11 @@ V1 is not intended to be a full ESG platform. It is an end-to-end, auditable por
 ## 3. Implemented Workflow
 
 ```text
-Upload BRSR PDF
+Client / Swagger uploads BRSR PDF
+    ->
+FastAPI + Pydantic boundary
+    ->
+supplier-assessment service
     ->
 ingest_document
     ->
@@ -95,12 +102,12 @@ generate_questions
     ->
 compile_brief
     ->
-Streamlit / Gradio output
+typed ESG Intelligence Brief
 ```
 
-The shared supplier-assessment service is the application boundary.
-
-FastAPI will call the same service rather than duplicating LangGraph or ESG logic.
+FastAPI calls the shared supplier-assessment service without duplicating
+LangGraph or ESG logic. Streamlit and Gradio remain direct presentation-layer
+consumers of the same service.
 
 ---
 
@@ -267,8 +274,9 @@ Validated behavior:
 ### Current automated baseline
 
 ```text
-47 passed
+57 passed
 0 failed
+11 subtests passed
 ```
 
 The suite covers retrieval, chunking, document isolation, state semantics,
@@ -377,7 +385,7 @@ Fix:
 - HITL
 - multi-company validation
 
-### Next learning required for V1
+### Delivery skills exercised in V1
 
 #### FastAPI
 - request/response models
@@ -396,9 +404,11 @@ Fix:
 
 ---
 
-## 8. Remaining V1 Delivery Plan
+## 8. V1 Delivery and Release Plan
 
 ### Phase 9 — FastAPI
+
+**Status: Complete**
 
 Goal:
 
@@ -413,10 +423,9 @@ Implementation requirements:
 5. do not duplicate business logic in routes
 6. handle synchronous LangGraph execution safely
 
-Preferred simple V1 approach:
+Implemented V1 approach:
 
-- use a synchronous FastAPI route (`def`) for the blocking assessment call,
-  unless async behavior is actually needed
+- use a synchronous FastAPI route (`def`) for the blocking assessment call
 
 Acceptance criteria:
 
@@ -426,6 +435,8 @@ Acceptance criteria:
 - Streamlit behavior remains unchanged
 
 ### Phase 10 — OpenAPI / Swagger validation
+
+**Status: Complete**
 
 Validate:
 
@@ -437,6 +448,8 @@ Validate:
 - no schema mismatch between brief and API response
 
 ### Phase 11 — Docker
+
+**Status: Complete for local/container execution**
 
 Goal:
 
@@ -458,17 +471,18 @@ BRSR assessment succeeds
 
 Do not add Docker Compose or infrastructure services unless they are required.
 
+Verified on Python 3.12 with CPU-only PyTorch: image build, Uvicorn startup,
+container health HTTP 200, Swagger, multipart upload, explicit response schema,
+and a real Birla BRSR assessment returning the expected typed business output.
+
 ### Phase 12 — Final validation
 
-Before release:
+Remaining before release:
 
-1. run full automated suite
-2. rerun Reliance
-3. rerun Birla
-4. test one weaker / disclosure-poor BRSR
-5. validate API response
-6. validate Docker execution
-7. run `git diff --check`
+1. keep the maintained regression suite green
+2. test one weaker/disclosure-poor BRSR if this acceptance step is retained
+3. complete cloud deployment and validate the deployed API paths
+4. run final release checks, including `git diff --check`
 
 ### Phase 13 — Portfolio release
 
@@ -482,6 +496,7 @@ Complete:
 - setup/run instructions
 - `.env.example`
 - clean Git status
+- cloud deployment validation
 - release commit/tag
 
 ---
@@ -535,11 +550,13 @@ Complete:
 
 ### Delivery
 
-- [ ] FastAPI endpoint implemented
-- [ ] Pydantic API contract validated
-- [ ] Swagger assessment run completed
-- [ ] Docker build/run validated
+- [x] FastAPI endpoint implemented
+- [x] Pydantic API contract validated
+- [x] Swagger assessment run completed
+- [x] Docker build/run validated
+- [x] real Birla BRSR succeeded end-to-end inside Docker
 - [ ] third real-company validation completed
+- [ ] cloud deployment completed
 - [ ] final V1 docs/screenshots completed
 - [ ] V1 tagged/released
 
@@ -557,9 +574,10 @@ Potential capabilities:
 
 - PostgreSQL / Supabase
 - assessment history
-- multi-supplier views
+- multi-supplier comparison/views
 - supplier-response workflow
 - retrieval evaluation / LangSmith / RAGAS
+- checkpointing / persistence
 - MCP exposure of stable assessment capabilities
 - authentication if justified
 
@@ -598,20 +616,18 @@ Potential capabilities:
 
 Do not add major product features before V1 release.
 
-The current sequence is:
+The remaining sequence is:
 
 ```text
-FastAPI
+maintained regression validation
     ->
-OpenAPI / Swagger
+final documentation / release hardening
     ->
-Docker
+third weaker-BRSR validation (if retained)
     ->
-third-company validation
+cloud deployment
     ->
-final documentation / demo
-    ->
-V1 release
+v1.0.0 release/tag
 ```
 
 The purpose of the remaining V1 work is delivery and packaging, not another feature-expansion sprint.

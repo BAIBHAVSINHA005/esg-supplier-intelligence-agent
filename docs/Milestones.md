@@ -335,8 +335,9 @@ rather than the raw filename-derived label.
 ### Automated Tests
 
 ```text
-47 passed
+57 passed
 0 failed
+11 subtests passed
 ```
 
 ### Real-Document Validation Completed
@@ -357,34 +358,55 @@ rather than the raw filename-derived label.
 
 ---
 
-## Milestone 12 — V1 Delivery Layer
+## Milestone 12 — V1 API and Container Delivery
 
-**Status:**  In Progress / Next
+**Status:** ✅ Completed locally
+
+### Completed
+
+- FastAPI `GET /health`
+- multipart PDF `POST /v1/assessments`
+- explicit nested Pydantic public response contract
+- OpenAPI and Swagger upload validation
+- Docker image build on Python 3.12
+- CPU-only PyTorch dependency setup
+- Uvicorn/FastAPI container startup
+- container `/health` HTTP 200
+- real Birla BRSR assessment through Swagger, FastAPI, Docker, LangGraph,
+  RAG/LLM, and typed brief output
+- maintained regression suite: 57 passed, 0 failed, 11 subtests passed
+
+### Outcome
+
+The local Dockerized V1 path is verified end to end. Cloud deployment is not
+part of this completed milestone and has not yet been claimed.
+
+---
+
+## Milestone 13 — V1 Release Closure
+
+**Status:** In progress
 
 ### Remaining
-- FastAPI
-- explicit Pydantic API contract
-- OpenAPI / Swagger validation
-- Docker
-- one additional real-company validation
-- final regression run
-- final documentation/screenshots
-- GitHub V1 tag/release
+
+- maintained regression validation
+- final documentation, demo assets, and release hardening
+- one additional weaker/disclosure-poor BRSR validation, if retained
+- cloud deployment and deployed endpoint verification
+- final release commit and `v1.0.0` tag
 
 ### Current Execution Order
 
 ```text
-FastAPI
+regression validation
     ->
-OpenAPI / Swagger
+documentation / release hardening
     ->
-Docker
+third weaker-BRSR validation (if retained)
     ->
-third-company validation
+cloud deployment
     ->
-final documentation / demo
-    ->
-V1 release
+v1.0.0 release/tag
 ```
 
 ---

@@ -186,36 +186,32 @@ Future work:
 
 ## 5. API and Delivery
 
-### 5.1 FastAPI boundary
+### 5.1 FastAPI and Docker delivery boundary
 
-**Status:** Pending V1 work
-**Priority:** High
+**Status:** Implemented and validated locally
+**Priority:** Closed for V1
 
-FastAPI is not technical debt yet because it is an explicit remaining V1 deliverable.
+The API and containerization work previously tracked here is complete:
 
-Required:
-- file-upload endpoint
-- Pydantic request/response contracts
-- controlled failure schema
-- synchronous LangGraph execution handling
+- `GET /health` and multipart `POST /v1/assessments`
+- explicit nested Pydantic public response contract
 - OpenAPI / Swagger validation
+- synchronous LangGraph execution behind the shared service boundary
+- Python 3.12 Docker build with CPU-only PyTorch
+- Uvicorn container startup and HTTP 200 health check
+- successful real Birla BRSR assessment inside the container
 
-Once implemented, remove this item from this document.
+Cloud deployment is remaining V1 release work, not completed technical debt.
 
-### 5.2 Docker
+### 5.2 Single-worker, synchronous assessment execution
 
-**Status:** Pending V1 work
-**Priority:** High
+**Status:** Intentional V1 limitation
+**Priority:** V2, based on measured demand
 
-Docker is also a planned V1 deliverable rather than debt.
-
-Required:
-- reproducible build
-- environment-variable handling
-- exposed API port
-- successful BRSR assessment in container
-
-Remove after V1 validation.
+The container runs one Uvicorn worker and each assessment performs blocking
+LangGraph/LLM work. This is acceptable for the V1 portfolio workflow. Before
+supporting concurrent production traffic, evaluate request queuing, worker
+isolation, timeouts, and ChromaDB concurrency behavior.
 
 ---
 
@@ -319,12 +315,11 @@ Current status:
 ## 9. Debt Prioritization
 
 ### Must close before V1 release
-- FastAPI
-- Pydantic API contract
-- OpenAPI / Swagger validation
-- Docker
-- third-company validation
-- final regression run
+- maintained regression validation
+- final documentation and release hardening
+- third weaker-BRSR validation if retained
+- cloud deployment
+- `v1.0.0` release/tag
 
 ### Important after V1
 - formal retrieval evaluation
@@ -332,6 +327,7 @@ Current status:
 - broader table/numeric regression coverage
 - collection lifecycle management
 - runtime observability
+- checkpointing/persistence
 
 ### Add only if evidence justifies it
 - hybrid retrieval

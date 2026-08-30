@@ -30,10 +30,16 @@ Current V1 work includes:
 - supplier-specific follow-up questions
 - deterministic procurement recommendations
 - Streamlit and Gradio presentation layers
+- FastAPI `GET /health` and multipart `POST /v1/assessments` endpoints
+- explicit nested Pydantic response models exposed through OpenAPI/Swagger
+- a Python 3.12 Docker image with CPU-only PyTorch and Uvicorn
+- a verified real-BRSR assessment through the complete Dockerized API path
 - regression tests for retrieval, state consistency, grounding, and failure paths
 
-The remaining V1 delivery work is focused on **FastAPI, OpenAPI/Swagger,
-Docker, final validation, and release documentation**.
+The remaining V1 work is release-focused: **maintained regression validation,
+final documentation and release hardening, an optional third weaker-BRSR
+validation, cloud deployment, and the `v1.0.0` release/tag**. Cloud deployment
+and the final release/tag are not yet complete.
 
 ## Why it matters
 
@@ -87,7 +93,10 @@ This allows the workflow to answer a procurement-oriented question:
 ## How it works
 
 ```text
-Streamlit / Gradio
+API client / Swagger
+        |
+        v
+FastAPI + nested Pydantic contract
         |
         v
 supplier assessment service
@@ -241,7 +250,8 @@ regression examples.
 
 ## Automated validation
 
-The maintained test suite currently has **47 passing tests** covering areas
+The maintained test suite currently has **57 passing tests and 11 passing
+subtests** covering areas
 including:
 
 - semantic extraction
@@ -266,15 +276,18 @@ including:
 | Retrieval | ChromaDB with `all-MiniLM-L6-v2` sentence-transformer embeddings |
 | Document processing | Python and PyMuPDF |
 | Service boundary | Python assessment service |
+| API | FastAPI with multipart PDF upload |
+| Public contract | Explicit nested Pydantic response models; OpenAPI/Swagger validated |
 | User interfaces | Streamlit and Gradio |
-| Tests | Python `unittest` |
-| Planned V1 delivery layer | FastAPI, OpenAPI/Swagger, Docker |
+| Packaging/runtime | Docker on Python 3.12; Uvicorn; CPU-only PyTorch |
+| Tests | `pytest` over the maintained regression suite |
 
 ## Repository layout
 
 ```text
 app/
 |-- agent/        # LangGraph state, routing, nodes, evidence, and compiled graph
+|-- api/          # FastAPI routes and explicit public response models
 |-- extraction/   # PDF parsing, BRSR detection, prompts, and LLM extraction
 |-- rag/          # Chunking, embeddings, Chroma indexing, and retrieval
 |-- schemas/      # Structured extraction and assessment schemas
@@ -283,6 +296,9 @@ app/
 
 tests/            # Regression, reliability, retrieval, and UI/service tests
 ```
+
+Streamlit and Gradio call the same assessment service directly; they do not
+route through FastAPI or duplicate domain logic.
 
 ## Current limitations
 
@@ -293,7 +309,7 @@ tests/            # Regression, reliability, retrieval, and UI/service tests
 - The application is currently a single-assessment portfolio workflow rather
   than a persistent multi-supplier platform.
 - Persistence, authentication, and assessment history are deferred beyond V1.
-- FastAPI and Docker are the remaining V1 delivery-layer milestones.
+- Cloud deployment and final `v1.0.0` release packaging remain incomplete.
 - Some evidence may remain `citation_only` or `excerpt_unmatched` when strict
   provenance matching cannot safely confirm an exact retrieved-source match.
 
@@ -311,16 +327,18 @@ tests/            # Regression, reliability, retrieval, and UI/service tests
 8. procurement recommendations and supplier-specific questions
 9. Streamlit / Gradio presentation
 10. multi-company real-BRSR validation
+11. FastAPI health and multipart assessment endpoints
+12. explicit nested Pydantic API contract and Swagger/OpenAPI validation
+13. Python 3.12 Docker image with CPU-only PyTorch
+14. container startup, health check, and real Birla BRSR end-to-end validation
 
 ### Remaining before V1 release
 
-1. FastAPI service/API boundary
-2. explicit Pydantic request/response contracts
-3. OpenAPI/Swagger validation
-4. Docker containerization
-5. one additional real-company validation
-6. final README/demo screenshots and architecture documentation
-7. V1 release/tag
+1. maintained regression validation
+2. final documentation, demo assets, and release hardening
+3. one additional weaker/disclosure-poor BRSR validation, if retained
+4. cloud deployment
+5. `v1.0.0` release/tag
 
 ## Beyond V1
 
@@ -328,7 +346,11 @@ Future versions are expected to focus on:
 
 - persistent multi-supplier assessments
 - PostgreSQL / Supabase and assessment history
+- pgvector migration if evaluation justifies it
+- supplier comparison
 - evaluation and observability with tools such as LangSmith and RAGAS
+- checkpointing and persistence
+- authentication
 - MCP exposure of supplier-assessment capabilities
 - supplier-response and follow-up workflows
 - specialist agent orchestration where it adds clear business value

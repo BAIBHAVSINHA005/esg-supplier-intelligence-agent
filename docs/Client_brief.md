@@ -245,24 +245,27 @@ These two filings exposed different retrieval and disclosure patterns and were u
 
 ### Application Layer
 - Python supplier-assessment service
+- FastAPI
+- explicit nested Pydantic public response contract
+- OpenAPI / Swagger
 
 ### User Interfaces
 - Streamlit
 - Gradio
 
 ### Testing
-- Python `unittest`
+- maintained `pytest` regression suite
 
-### Remaining V1 Delivery Layer
-- FastAPI
-- OpenAPI / Swagger
-- Docker
+### Packaging and Runtime
+- Docker on Python 3.12
+- CPU-only PyTorch
+- Uvicorn serving FastAPI inside the container
 
 ---
 
 ## Current Validation Baseline
 
-**47 automated tests passing**
+**57 automated tests and 11 subtests passing; 0 failures**
 
 Coverage includes:
 - retrieval regressions
@@ -337,15 +340,17 @@ The product is intended to turn supplier sustainability disclosures into **trace
 - supplier-specific questions
 - Streamlit / Gradio presentation
 - Reliance and Birla validation
+- FastAPI health and multipart assessment endpoints
+- explicit API response contracts and Swagger/OpenAPI validation
+- Docker build, startup, and health validation
+- real Birla BRSR assessment completed end-to-end inside Docker with HTTP 200
 
 ### Remaining Before V1 Release
-- FastAPI
-- explicit API response contracts
-- OpenAPI / Swagger validation
-- Docker
-- third-company validation
-- final demo / screenshots
-- V1 release/tag
+- maintained regression validation
+- final documentation, demo assets, and release hardening
+- third weaker-BRSR validation if retained
+- cloud deployment
+- `v1.0.0` release/tag
 
 ---
 
@@ -357,7 +362,9 @@ Persistent multi-supplier assessment and supplier-response workflows.
 Potential capabilities:
 - PostgreSQL / Supabase
 - assessment history
+- supplier comparison
 - evaluation / observability
+- checkpointing / persistence
 - MCP
 - authentication where justified
 

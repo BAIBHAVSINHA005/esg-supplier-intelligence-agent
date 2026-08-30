@@ -2,7 +2,7 @@
 
 ## Architecture v1
 
-**Status:** Current V1 Architecture — Core Intelligence Complete, Delivery Layer Pending
+**Status:** Current V1 Architecture — Local Containerized Delivery Verified
 **Version:** 1.0
 **Updated:** August 2026
 
@@ -40,7 +40,7 @@ Streamlit and Gradio are presentation layers only. Core intelligence is
 implemented in the shared service, LangGraph workflow, extraction layer, RAG
 layer, and deterministic analysis functions.
 
-Future FastAPI endpoints will consume the same service layer.
+FastAPI consumes the same service layer through a thin HTTP boundary.
 
 ### 2.2 Deterministic rules complement LLM extraction
 
@@ -94,6 +94,8 @@ BRSR workflow is stable and evaluated.
 | Layer | Current V1 implementation | Role |
 | --- | --- | --- |
 | User interfaces | Streamlit + Gradio | Upload and display of ESG Intelligence Briefs |
+| HTTP API | FastAPI + Uvicorn | Health and multipart assessment endpoints |
+| Public API contract | Explicit nested Pydantic models | OpenAPI/Swagger request and response schema |
 | Shared application boundary | Python service layer | Single entry point for assessment execution |
 | Workflow orchestration | LangGraph | State, nodes, routing, assessment workflow |
 | LLM extraction | OpenAI Responses API + Pydantic validation | Structured indicator extraction |
@@ -102,16 +104,15 @@ BRSR workflow is stable and evaluated.
 | Vector retrieval | ChromaDB | Document-scoped semantic retrieval |
 | Analysis | Deterministic Python rules | Scope 3 classification, completeness, gaps, actions |
 | Evidence layer | Deterministic provenance matching | Evidence register and source references |
-| Tests | Python `unittest` | Reliability and regression validation |
+| Packaging | Docker on Python 3.12 with CPU-only PyTorch | Reproducible local API runtime |
+| Tests | `pytest` maintained suite | Reliability and regression validation |
 
-### Planned before V1 release
+### Remaining before V1 release
 
-| Layer | Planned V1 addition |
+| Layer | Remaining V1 work |
 | --- | --- |
-| API | FastAPI |
-| API contract | Pydantic request/response models |
-| API documentation | OpenAPI / Swagger |
-| Packaging | Docker |
+| Deployment | Cloud deployment and deployed endpoint verification |
+| Release | Final hardening and `v1.0.0` tag |
 
 Persistence, authentication, Supabase/PostgreSQL, pgvector, MCP, and
 multi-agent orchestration are **not current V1 dependencies**.
@@ -122,8 +123,13 @@ multi-agent orchestration are **not current V1 dependencies**.
 
 ```text
                  +----------------------+
-                 | Streamlit / Gradio   |
-                 | Presentation Layers  |
+                 | Client / Swagger     |
+                 +----------+-----------+
+                            |
+                            v
+                 +----------------------+
+                 | FastAPI + Pydantic   |
+                 | in Docker / Uvicorn  |
                  +----------+-----------+
                             |
                             v
@@ -161,13 +167,13 @@ multi-agent orchestration are **not current V1 dependencies**.
                  +----------------------+
 ```
 
-### Planned FastAPI boundary
+### Verified FastAPI boundary
 
 ```text
 External API Client
         |
         v
-     FastAPI
+FastAPI + nested Pydantic contract
         |
         v
 Supplier Assessment Service
@@ -176,8 +182,9 @@ Supplier Assessment Service
      LangGraph
 ```
 
-For V1, Streamlit and Gradio may continue to call the shared service directly.
-FastAPI will be an additional consumer of the same service contract.
+For V1, Streamlit and Gradio continue to call the shared service directly.
+FastAPI is an additional consumer of the same service contract and runs under
+Uvicorn inside Docker for the verified container path.
 
 This avoids duplicating domain logic and keeps the API boundary independent of
 the user interface.
@@ -561,9 +568,10 @@ Neither UI owns ESG decision logic.
 
 ---
 
-## 17. FastAPI Design Requirements for V1
+## 17. FastAPI Implementation in V1
 
-FastAPI is the next delivery-layer milestone.
+FastAPI is implemented as a thin delivery boundary with `GET /health` and
+multipart `POST /v1/assessments`.
 
 ### 17.1 Blocking LangGraph execution
 
@@ -572,19 +580,15 @@ The current LangGraph workflow is synchronous and can take tens of seconds.
 V1 must avoid calling the blocking workflow directly inside an `async def`
 route.
 
-Acceptable V1 approaches include:
+The implemented V1 approach is:
 
 - define the assessment endpoint with synchronous `def`, allowing FastAPI to
-  execute it in its thread pool; or
-- explicitly offload the synchronous service call from an async route.
-
-The simpler V1 option is a synchronous route unless there is a concrete need
-for async endpoint logic.
+  execute it in its thread pool.
 
 ### 17.2 Explicit API contract
 
-FastAPI responses should use Pydantic models reflecting the existing brief
-structure.
+FastAPI responses use explicit nested Pydantic models reflecting the existing
+brief structure.
 
 The API schema should model the **current implemented output**, including
 optional/partial-failure fields, rather than inventing a future ideal schema.
@@ -605,8 +609,9 @@ No ESG or LangGraph business rule should be duplicated inside API routes.
 The maintained suite currently has:
 
 ```text
-47 passed
+57 passed
 0 failed
+11 subtests passed
 ```
 
 Coverage includes:
@@ -643,8 +648,8 @@ Validated behavior includes:
 - total waste generated retrieved as `31,223.96 MT`,
 - grounded procurement gaps and questions.
 
-A third weaker/disclosure-poor BRSR is planned before V1 closure to exercise
-additional real-world paths.
+A third weaker/disclosure-poor BRSR may be retained before V1 closure to
+exercise additional real-world paths.
 
 ---
 
@@ -664,8 +669,8 @@ additional real-world paths.
 - supplier questions
 - procurement recommendations
 - Streamlit / Gradio
-- FastAPI / OpenAPI before release
-- Docker before release
+- FastAPI / OpenAPI with multipart PDF upload
+- Docker/Uvicorn runtime on Python 3.12 with CPU-only PyTorch
 
 ### Explicitly deferred
 
@@ -740,10 +745,13 @@ Possible later capabilities:
 Core V1 intelligence pipeline       COMPLETE
 Reliability hardening               COMPLETE
 Evidence / procurement layer        COMPLETE
-Real-company validation             IN PROGRESS
-FastAPI / OpenAPI                   NEXT
-Docker                              AFTER FASTAPI
-Final documentation + demo          BEFORE V1 RELEASE
+Real-company validation             COMPLETE FOR RELIANCE + BIRLA
+FastAPI / OpenAPI                   COMPLETE
+Dockerized local execution          COMPLETE
+Real Birla Docker assessment        COMPLETE
+Cloud deployment                    NOT COMPLETE
+Final documentation + hardening     IN PROGRESS
+v1.0.0 release/tag                  NOT COMPLETE
 ```
 
 The current architecture is deliberately conservative: it prioritizes

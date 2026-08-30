@@ -1,172 +1,123 @@
 # Supplier ESG Intelligence Agent — V1 Status
 
 **Project:** Supplier ESG Intelligence Agent
-**Version:** V1
-**Status:** Core Intelligence Complete — Delivery Layer In Progress
-**Last Updated:** August 2026
 
-## Current V1 Objective
+**Version:** V1 release candidate
 
-V1 demonstrates an end-to-end, evidence-grounded AI workflow that converts an Indian BRSR filing into a procurement-ready ESG Intelligence Brief.
+**Status:** Core intelligence and local Docker delivery complete; release work remains
+**Last updated:** August 2026
 
-The current focus is BRSR Principle 6, with particular emphasis on Scope 3 disclosure usability, evidence traceability, supplier information gaps, and procurement follow-up.
+## Current V1 objective
 
-## Completed
+V1 demonstrates an end-to-end, evidence-grounded workflow that converts a
+machine-readable Indian BRSR filing into a typed, procurement-ready ESG
+Intelligence Brief. The current assessment depth is BRSR Principle 6, with
+particular emphasis on Scope 3 disclosure usability, evidence traceability,
+supplier information gaps, and procurement follow-up.
 
-### Core workflow
-- LangGraph-based assessment workflow
-- PDF ingestion and BRSR detection
-- document quality checks
-- Chroma indexing
-- document-scoped retrieval
-- indicator-specific retrieval
-- structured LLM extraction
-- deterministic ESG analysis
-- confidence and HITL logic
-- supplier-specific follow-up questions
-- procurement recommendations
-- ESG Intelligence Brief generation
+## Completed V1 work
 
-### Reliability and grounding
-- `not_found` separated from `extraction_error`
-- targeted OpenAI retry/backoff
+### Intelligence and reliability
+
+- LangGraph assessment workflow
+- PDF ingestion, BRSR detection, and document-quality checks
+- Chroma indexing with document-scoped and indicator-specific retrieval
 - bounded chunk subdivision for embedding reliability
-- document isolation with `document_id`
-- Scope 3 state-contract safeguards
-- strict evidence matching and provenance
-- no fabricated evidence for missing disclosures
-- supplier-name extraction from BRSR metadata with filename fallback
+- structured LLM extraction and deterministic ESG analysis
+- Scope 3 readiness, completeness, confidence, and HITL logic
+- `not_found` separated from `extraction_error`
+- bounded OpenAI rate-limit retry behavior
+- strict evidence provenance without fabricated sources
+- supplier-specific questions and deterministic procurement recommendations
+- typed ESG Intelligence Brief generation
+- Streamlit and Gradio presentation layers
 
-### User-facing experience
-- Streamlit interface
-- Gradio interface
-- executive summary
-- Scope 3 assessment
-- confidence explanation
-- completeness assessment
-- critical gaps
-- procurement recommendations
-- supplier follow-up questions
-- expandable evidence details
+### API and container delivery
 
-## Current Validation Baseline
+- FastAPI `GET /health`
+- FastAPI multipart `POST /v1/assessments`
+- explicit nested Pydantic public response contract
+- OpenAPI schema and Swagger upload flow validated
+- synchronous service execution kept behind the shared assessment boundary
+- Docker image built successfully on Python 3.12
+- CPU-only PyTorch dependency path validated
+- Uvicorn/FastAPI container startup validated
+- container `/health` returned HTTP 200
+- real Birla BRSR completed through Swagger → FastAPI → Docker → LangGraph →
+  RAG/LLM → typed brief with HTTP 200 and expected business output
 
-### Automated tests
-**47 passed, 0 failed**
+## Validation baseline
 
-Coverage includes:
-- retrieval regressions
-- chunk subdivision
-- document isolation
-- structured extraction
-- Scope 3 state consistency
-- extraction error handling
-- confidence/HITL
-- evidence grounding
-- procurement recommendations
-- supplier-name fallback
+### Automated regression suite
+
+```text
+57 passed
+0 failed
+11 subtests passed
+16 warnings
+```
+
+The warnings are deprecation/cache warnings and did not fail the maintained
+suite. Coverage includes retrieval regressions, chunk subdivision, document
+isolation, structured extraction, API contracts, Scope 3 state consistency,
+failure handling, confidence/HITL, evidence grounding, recommendations, and
+supplier-name fallback.
 
 ### Real-company validation
 
-#### Reliance Industries
-Validated:
-- total waste generated correctly retrieved
-- Scope 3 correctly classified as `not_found`
-- high-confidence assessment
-- grounded procurement output
+- **Reliance Industries:** waste retrieval hardening, Scope 3 `not_found`, high
+  confidence, and grounded procurement output validated.
+- **Birla Corporation Limited:** supplier identity, `18,09,403.78 tCO2e`
+  Scope 3 disclosure, Partial classification, `31,223.96 MT` total waste, and
+  grounded questions/recommendations validated. The Birla filing also passed
+  the complete Dockerized API path.
 
-#### Birla Corporation Limited
-Validated:
-- supplier name extracted correctly
-- Scope 3 emissions retrieved as `18,09,403.78 tCO2e`
-- Scope 3 classified as Partial
-- total waste generated retrieved as `31,223.96 MT`
-- grounded supplier questions and procurement recommendations
+## V1 scope and readiness
 
-## Current V1 Scope
+| Area | Status |
+| --- | --- |
+| Core LangGraph/RAG/ESG intelligence | Complete |
+| Reliability and evidence grounding | Complete |
+| Procurement-facing brief | Complete |
+| FastAPI and typed public contract | Complete |
+| OpenAPI/Swagger validation | Complete |
+| Local Docker build and runtime validation | Complete |
+| Real Dockerized Birla assessment | Complete |
+| Cloud deployment | Not complete |
+| Final `v1.0.0` release/tag | Not complete |
 
-Included:
-- BRSR only
-- Principle 6 depth
-- single-document supplier assessment
-- Scope 3 readiness classification
-- RAG and structured extraction
-- deterministic business rules
-- evidence provenance
-- confidence/HITL
-- procurement-facing brief
-- Streamlit and Gradio
+## Remaining before `v1.0.0`
 
-Not included in V1:
-- persistence
-- authentication
-- multi-user history
-- Supabase/PostgreSQL
-- pgvector migration
-- MCP
-- multi-agent orchestration
-- supplier email automation
-- additional ESG frameworks
+1. keep the maintained regression suite green
+2. finish documentation, demo assets, and release hardening
+3. validate a third weaker/disclosure-poor BRSR if that acceptance step is retained
+4. complete cloud deployment and verify the deployed health/assessment paths
+5. create the final release commit and `v1.0.0` tag
 
-## Remaining Before V1 Release
+No additional product features are required for V1.
 
-1. FastAPI service layer
-2. Pydantic request/response contracts
-3. OpenAPI / Swagger validation
-4. safe handling of synchronous LangGraph execution
-5. Docker containerization
-6. third-company validation
-7. final README and architecture update
-8. screenshots/demo assets
-9. final V1 regression run
-10. GitHub release/tag
+## Deferred beyond V1
 
-## V1 Readiness Assessment
+### V2 — persistent multi-supplier operation
 
-### Core intelligence
-**Ready**
-
-### Reliability
-**Ready**
-
-### Procurement-facing output
-**Ready**
-
-### API delivery layer
-**Pending**
-
-### Containerization
-**Pending**
-
-### Final release packaging
-**Pending**
-
-## Deferred to V2+
-
-### V2
-- persistence
-- assessment history
-- PostgreSQL / Supabase
-- observability and evaluation
-- MCP
+- PostgreSQL/Supabase persistence and assessment history
+- pgvector migration if evaluation justifies it
+- supplier comparison
+- formal evaluation and runtime observability
+- checkpointing/persistence
+- authentication and multi-user access
+- MCP exposure of stable capabilities
 - supplier-response workflows
 
-### V3
-- controlled specialist agents
+### V3 and future
+
+- controlled specialist-agent and verifier/critic workflows
 - supplier outreach automation
-- verifier/critic workflows
-- broader document types
+- broader ESG document/framework support
+- enterprise portfolio analysis, benchmarking, and integrations
 
-### V4
-- enterprise supplier portfolio analysis
-- cross-framework mapping
-- benchmarking
-- graph-based relationships where justified
+## Release decision
 
-## Release Decision
-
-V1 should not add additional product features before release.
-
-The remaining work is focused on packaging and delivery:
-
-**FastAPI → OpenAPI → Docker → final validation → documentation → release**
+V1 is functionally complete for local containerized execution. The release is
+not yet final because cloud deployment, final hardening, and the `v1.0.0` tag
+remain outstanding.

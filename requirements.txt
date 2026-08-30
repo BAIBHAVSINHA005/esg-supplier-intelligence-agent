@@ -41,3 +41,7 @@ websockets==15.0.1
 xxhash==3.8.0
 zstandard==0.25.0
 openai==2.45.0
+PyMuPDF==1.28.0
+chromadb==1.5.9
+sentence-transformers==5.6.0
+torch==2.13.0
